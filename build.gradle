@@ -61,7 +61,8 @@ tasks.register('reproductionTest', Test) {
 spotless {
 	java {
 		target 'src/**/*.java'
-		googleJavaFormat('1.36.1')
+		// javadoc은 포맷하지 않는다. 켜두면 문단마다 <p>를 넣어, 주석에 HTML 태그를 쓰지 않는 규칙과 부딪힌다.
+		googleJavaFormat('1.36.1').formatJavadoc(false)
 		trimTrailingWhitespace()
 		endWithNewline()
 	}
