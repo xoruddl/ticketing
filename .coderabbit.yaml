@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit 설정. 옵션 전체: https://docs.coderabbit.ai/reference/configuration
+language: ko-KR
+
+reviews:
+  poem: false
+  path_instructions:
+    - path: "src/**/*.java"
+      instructions: |
+        ai_docs/CLEAN_CODE.md의 클린코드 체크리스트와 SOLID 기준으로 리뷰한다.
+        AGENTS.md의 모듈 경계 규칙 ①~⑤ 위반을 지적한다.
+        포맷(들여쓰기·줄 길이)은 Spotless가 검사하므로 지적하지 않는다.
+    - path: "src/test/**/*.java"
+      instructions: |
+        @Tag("reproduction") 테스트는 아직 해결하지 않은 문제를 일부러 실패로 두는 재현 테스트다.
+        실패하는 것 자체를 문제로 지적하지 않는다.
