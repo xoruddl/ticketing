@@ -35,6 +35,7 @@ app  →  reservation · payment · ticket  →  user  →  shared-kernel
 1. `ai_docs/PROBLEMS.md`의 **순서대로** 진행하고, 완료하면 체크박스를 갱신한다.
 2. **재현 먼저.** 해결책을 넣기 전에 실패하는 테스트로 문제를 드러낸다.
 3. **Step마다 멈춘다.** 재현 → 고침 → 설명 → 커밋. 한 번에 한 Step만 한다.
+   Step 안에서도 **조금씩 바꾼다** — 작은 단위로 고치고, 테스트를 돌리고, 커밋한다 (`ai_docs/CONTRIBUTING.md`의 "변경 단위").
 4. 검증은 **테스트 코드로** 한다.
 5. 새 테스트는 **코드를 되돌려서 실패하는지** 확인한다.
 6. Step이 끝나면 `ai_docs/PROGRESS.md`에 목표·한 일과 이유·만난 문제·커밋 해시를 남긴다.
