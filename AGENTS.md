@@ -38,13 +38,17 @@ app  →  reservation · payment · ticket  →  user  →  shared-kernel
 4. 검증은 **테스트 코드로** 한다.
 5. 새 테스트는 **코드를 되돌려서 실패하는지** 확인한다.
 6. Step이 끝나면 `ai_docs/PROGRESS.md`에 목표·한 일과 이유·만난 문제·커밋 해시를 남긴다.
-7. `main`에 직접 커밋하지 않는다. Step마다 브랜치를 딴다.
-8. 요청받지 않은 푸시는 하지 않는다.
+7. 브랜치·커밋·PR은 `ai_docs/CONTRIBUTING.md`를 따른다 (git flow, `feature/step-{N}-{주제}` → `develop`). `main`에 직접 커밋하지 않는다.
+8. 코드는 `ai_docs/CLEAN_CODE.md`를 따르고, 커밋 전에 `./gradlew spotlessApply`를 돌린다.
+9. 아직 못 고친 문제의 재현 테스트에는 `@Tag("reproduction")`을 붙인다 (기본 `test`와 CI에서 제외).
+10. 요청받지 않은 푸시는 하지 않는다.
 
 ## 실행 · 테스트
 
 ```bash
-./gradlew test    # Testcontainers가 MySQL을 띄운다 (Docker 필요)
+./gradlew build              # 포맷 검사 + 테스트. Testcontainers가 MySQL을 띄운다 (Docker 필요)
+./gradlew spotlessApply      # 포맷 자동 수정
+./gradlew reproductionTest   # 재현 테스트만 (실패가 정상)
 # 앱 실행: src/test/java/com/ticketing/TestTicketingApplication의 main()
 ```
 
@@ -62,6 +66,8 @@ app  →  reservation · payment · ticket  →  user  →  shared-kernel
 | 문서 | 역할 |
 |---|---|
 | `ai_docs/FEATURES.md` | 만들 기능의 범위 |
+| `ai_docs/CONTRIBUTING.md` | 브랜치 전략, 커밋 컨벤션, PR, 포맷, CI |
+| `ai_docs/CLEAN_CODE.md` | 클린코드 체크리스트, SOLID |
 | `ai_docs/PROBLEMS.md` | 풀어야 할 문제 (Step 0~13) |
 | `ai_docs/PROGRESS.md` | 실제로 한 일과 이유 |
 | `ai_docs/DECISIONS.md` | 기술 결정 기록 |
