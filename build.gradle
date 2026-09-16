@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.1.1'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.diffplug.spotless' version '8.10.2'
 }
 
 group = 'com.ticketing'
@@ -36,6 +37,32 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
+// 'reproduction' 태그는 아직 못 고친 문제를 일부러 실패로 두는 재현 테스트다.
+// 기본 test에 포함하면 CI가 상시 실패하므로 제외하고, 해당 Step에서 고치면 태그를 뗀다.
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		excludeTags 'reproduction'
+	}
+}
+
+// 재현 테스트만 돌린다: ./gradlew reproductionTest (실패가 정상이라 빌드를 세우지 않는다)
+tasks.register('reproductionTest', Test) {
+	group = 'verification'
+	description = '아직 해결되지 않은 문제를 재현하는 테스트'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'reproduction'
+	}
+	ignoreFailures = true
+}
+
+// 포맷 검사는 check(→ build)에 자동으로 걸린다. 고치기: ./gradlew spotlessApply
+spotless {
+	java {
+		target 'src/**/*.java'
+		googleJavaFormat('1.36.1')
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
 }
