@@ -4,6 +4,11 @@ language: ko-KR
 
 reviews:
   poem: false
+  # 기본은 기본 브랜치(main) 대상 PR만 자동 리뷰한다. git flow라 대부분의 PR이 develop으로 간다.
+  auto_review:
+    enabled: true
+    base_branches:
+      - "develop"
   path_instructions:
     - path: "src/**/*.java"
       instructions: |
