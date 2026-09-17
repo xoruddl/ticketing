@@ -1,6 +1,7 @@
 package com.ticketing.booking.application;
 
 import com.ticketing.booking.domain.Schedule;
+import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.ScheduleRepository;
 import com.ticketing.booking.domain.Seat;
 import com.ticketing.booking.domain.SeatRepository;
@@ -31,11 +32,11 @@ public class SeatQueryService {
    * 읽어도 안전하다.
    */
   public List<Seat> findSeats(Long scheduleId) {
-    // 없는 회차는 다음 커밋에서 BookingErrorCode 기반 404로 바꾼다. 지금은 원인만 드러낸다.
+    // 없는 회차는 도메인 예외로 알린다. 몇 번 상태로 응답할지는 web의 BookingExceptionHandler가 정한다.
     Schedule schedule =
         scheduleRepository
             .findById(scheduleId)
-            .orElseThrow(() -> new IllegalArgumentException("회차가 없다: " + scheduleId));
+            .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
     return seatRepository.findAllByPerformanceIdOrderByIdAsc(schedule.getPerformanceId());
   }
 }

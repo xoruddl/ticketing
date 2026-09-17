@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 /** 회차 좌석 조회 API. 요청부터 DB 조회까지 실제로 거쳐 응답 JSON을 확인한다. */
@@ -42,6 +44,25 @@ class SeatQueryTest {
               assertThat(json)
                   .extractingPath("$[0].price")
                   .isEqualTo((int) BookingFixture.SEAT_PRICE);
+            });
+  }
+
+  @Test
+  void 없는_회차의_좌석을_조회하면_404를_응답한다() {
+    // id는 IDENTITY로 1부터 매겨지므로 0번 회차는 항상 없다.
+    long missingScheduleId = 0L;
+
+    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", missingScheduleId))
+        .hasStatus(HttpStatus.NOT_FOUND)
+        .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .bodyJson()
+        .satisfies(
+            json -> {
+              // 클라이언트는 문구가 아니라 code로 에러 종류를 구분한다.
+              assertThat(json).extractingPath("$.code").isEqualTo("SCHEDULE_NOT_FOUND");
+              assertThat(json).extractingPath("$.detail").isEqualTo("회차를 찾을 수 없다: 0");
+              // instance는 핸들러가 채우지 않아도 Spring이 요청 경로로 채운다.
+              assertThat(json).extractingPath("$.instance").isEqualTo("/schedules/0/seats");
             });
   }
 }
