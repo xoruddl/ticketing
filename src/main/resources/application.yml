@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: ticketing
+  jpa:
+    hibernate:
+      # 스키마는 Flyway(db/migration)가 만든다. Hibernate는 엔티티와 테이블이 맞는지만 확인하고, 어긋나면 기동을 멈춘다.
+      ddl-auto: validate
+    # 트랜잭션이 끝난 뒤 컨트롤러·뷰에서 지연 로딩이 일어나지 않게 한다. 켜두면 요청 내내 DB 커넥션을 붙잡는다.
+    open-in-view: false
