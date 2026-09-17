@@ -39,7 +39,20 @@ public class Seat {
   private long price;
 
   // 인자가 4개라 CLEAN_CODE.md 8번(3개 이하)을 어긴다. 등급·가격을 묶을지는 따로 정한다.
+  // 가격 0원(초대석 등)은 허용하고, 음수만 막는다.
   public Seat(Long performanceId, SeatPosition position, SeatGrade grade, long price) {
+    if (performanceId == null) {
+      throw new IllegalArgumentException("좌석의 공연 ID는 비어 있을 수 없다");
+    }
+    if (position == null) {
+      throw new IllegalArgumentException("좌석 위치는 비어 있을 수 없다");
+    }
+    if (grade == null) {
+      throw new IllegalArgumentException("좌석 등급은 비어 있을 수 없다");
+    }
+    if (price < 0) {
+      throw new IllegalArgumentException("좌석 가격은 음수일 수 없다: " + price);
+    }
     this.performanceId = performanceId;
     this.position = position;
     this.grade = grade;
