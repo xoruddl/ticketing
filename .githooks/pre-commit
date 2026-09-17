@@ -10,7 +10,8 @@
 MAX_FILES=2
 
 # 이번 커밋에 들어갈(스테이지된) 파일 목록. 이름 변경은 한 파일로 센다.
-staged=$(git diff --cached --name-only)
+# --find-renames를 명시한다. 사용자 설정이 diff.renames=false면 이름 변경이 삭제+추가 2개로 세어지기 때문이다.
+staged=$(git diff --cached --name-only --find-renames)
 count=$(printf '%s\n' "$staged" | grep -c .)
 
 if [ "$count" -le "$MAX_FILES" ]; then
