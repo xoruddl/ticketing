@@ -1,4 +1,4 @@
-package com.ticketing.booking;
+package com.ticketing.booking.domain;
 
 /** 좌석 등급. 가격은 등급이 아니라 좌석마다 따로 가진다 ({@link Seat}의 price). */
 public enum SeatGrade {

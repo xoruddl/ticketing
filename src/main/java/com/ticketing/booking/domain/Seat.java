@@ -1,4 +1,4 @@
-package com.ticketing.booking;
+package com.ticketing.booking.domain;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
