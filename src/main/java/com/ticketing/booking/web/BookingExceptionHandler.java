@@ -8,11 +8,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * booking 도메인 예외를 HTTP 응답으로 바꾼다. 도메인 예외는 HTTP를 모르므로, 예외 → BookingErrorCode 매핑을 여기서 한다.
  *
- * 응답은 RFC 9457 ProblemDetail 형식이다. 예:
+ * 응답은 RFC 9457 ProblemDetail 형식이다. 예: GET /schedules/999/seats
  *
  * <pre>
- * 404 {"status":404,"title":"Not Found","detail":"회차를 찾을 수 없다: 999","code":"SCHEDULE_NOT_FOUND"}
+ * 404 application/problem+json
+ * {"detail":"회차를 찾을 수 없다: 999","instance":"/schedules/999/seats","status":404,"title":"Not Found","code":"SCHEDULE_NOT_FOUND"}
  * </pre>
+ *
+ * 핸들러가 채우는 것은 status·detail·code뿐이다. title은 상태 코드의 기본 문구로, instance는 Spring이 요청 경로로
+ * 채운다. type은 설정하지 않아 응답에서 빠진다.
  */
 @RestControllerAdvice
 public class BookingExceptionHandler {
