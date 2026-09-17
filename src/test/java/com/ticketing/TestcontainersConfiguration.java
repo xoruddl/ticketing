@@ -6,8 +6,13 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
+/**
+ * 통합 테스트용 MySQL 컨테이너. 쓰는 테스트에서 @Import(TestcontainersConfiguration.class)로 가져온다.
+ *
+ * 모듈별 테스트(com.ticketing.booking 등)는 하위 패키지라 별개 패키지이므로, 가져다 쓸 수 있게 public으로 연다.
+ */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
   @Bean
   @ServiceConnection
