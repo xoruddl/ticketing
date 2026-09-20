@@ -1,6 +1,8 @@
 package com.ticketing.booking.web;
 
 import com.ticketing.booking.domain.ScheduleNotFoundException;
+import com.ticketing.booking.domain.SeatAlreadyTakenException;
+import com.ticketing.booking.domain.SeatNotFoundException;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +26,20 @@ public class BookingExceptionHandler {
   @ExceptionHandler(ScheduleNotFoundException.class)
   public ProblemDetail handle(ScheduleNotFoundException e) {
     return problem(BookingErrorCode.SCHEDULE_NOT_FOUND, e.getScheduleId());
+  }
+
+  @ExceptionHandler(SeatNotFoundException.class)
+  public ProblemDetail handle(SeatNotFoundException e) {
+    return problem(BookingErrorCode.SEAT_NOT_FOUND, e.getSeatId());
+  }
+
+  /**
+   * 회차는 요청 본문에 있어 보낸 쪽이 알고 있으므로, 응답에는 좌석 ID만 담는다. 회차까지 함께 남기는 것은 예외
+   * 메시지(로그)의 몫이다.
+   */
+  @ExceptionHandler(SeatAlreadyTakenException.class)
+  public ProblemDetail handle(SeatAlreadyTakenException e) {
+    return problem(BookingErrorCode.SEAT_ALREADY_TAKEN, e.getSeat().seatId());
   }
 
   /**

@@ -16,7 +16,17 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum BookingErrorCode {
   /** 요청한 회차가 없다. 대응 예외: ScheduleNotFoundException */
-  SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "회차를 찾을 수 없다");
+  SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "회차를 찾을 수 없다"),
+
+  /** 요청한 회차에 그 좌석이 없다. 대응 예외: SeatNotFoundException */
+  SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없다"),
+
+  /**
+   * 이미 팔린 좌석을 선점하려 했다. 대응 예외: SeatAlreadyTakenException
+   *
+   * 400이 아니라 409다. 요청이 틀린 것이 아니라 좌석의 상태가 바뀐 것이고, 나중에는 같은 요청이 성공할 수도 있다.
+   */
+  SEAT_ALREADY_TAKEN(HttpStatus.CONFLICT, "이미 팔린 좌석이다");
 
   /** 응답 상태 코드. */
   private final HttpStatus status;
