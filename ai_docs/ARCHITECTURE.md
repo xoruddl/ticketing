@@ -51,7 +51,7 @@ flowchart TB
     관객["관객"]
 
     subgraph 예매시스템["좌석 예매 시스템"]
-        앱["예매 앱<br/><i>Spring Boot 4.1 / Java 21</i><br/>모듈러 모놀리식. 배포는 하나다"]
+        앱["예매 앱<br/><i>Spring Boot 4.1 / Java 21</i><br/>모듈러 모놀리식<br/>배포는 하나다"]
         앱2["예매 앱 (2번째 인스턴스)<br/><i>Step 10</i>"]
         DB[("MySQL 8.0<br/><i>공연·회차·좌석·예약</i>")]
     end
@@ -69,6 +69,8 @@ flowchart TB
     class 앱 container
     class DB db
     class 앱2 planned
+    %% subgraph는 기본 배경색이 있어, 안쪽 상자의 색 구분을 흐리지 않게 비운다
+    style 예매시스템 fill:#fff,stroke:#bbb,color:#333
 ```
 
 **컨테이너가 앱 하나와 DB 하나뿐이라는 것**이 이 프로젝트의 출발점이다.
@@ -106,6 +108,8 @@ flowchart TB
     classDef planned fill:#e8f0f9,stroke:#7aa6d6,color:#333,stroke-dasharray:4 3
     class booking component
     class reservation,payment,ticket,user,sharedkernel planned
+    style 앱 fill:#fff,stroke:#bbb,color:#333
+    style 예정 fill:#fafafa,stroke:#bbb,color:#333
 ```
 
 지금 컴포넌트는 `booking` 하나다. 나누는 것은 Step 4, 경계를 테스트로 강제하는 것은 Step 5다.
