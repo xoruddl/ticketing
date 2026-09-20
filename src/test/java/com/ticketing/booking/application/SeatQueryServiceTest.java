@@ -48,9 +48,13 @@ class SeatQueryServiceTest {
 
     List<SeatAvailability> seats = seatQueryService.findSeatAvailabilities(stage.scheduleId());
 
-    // 좌석은 id 순으로 오므로 순서가 픽스처가 만든 순서와 같다. 가운데 좌석만 막혀 있어야 한다.
+    // 아래 단언이 순서에 기대므로, 좌석이 어떤 순서로 오는지를 먼저 못 박는다.
+    // 이게 없으면 정렬이 뒤집혀도 테스트가 통과한다. 셋 중 가운데가 막힌 모양은 뒤집어도 똑같기 때문이다.
+    assertThat(seats)
+        .extracting(availability -> availability.seat().getId())
+        .containsExactly(stage.seatId(0), stage.seatId(1), stage.seatId(2));
+    // 선점한 가운데 좌석만 막히고 양옆은 그대로다.
     assertThat(seats).extracting(SeatAvailability::available).containsExactly(true, false, true);
-    assertThat(seats.get(1).seat().getId()).isEqualTo(stage.seatId(1));
   }
 
   /**
