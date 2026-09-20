@@ -1,3 +1,8 @@
+booking:
+  # 좌석을 선점한 뒤 결제까지 주어지는 시간. 지나면 선점이 만료되고 좌석이 다시 팔린다.
+  # 짧으면 결제하다 놓치는 사람이 늘고, 길면 남은 좌석이 오래 묶인다. 이 값이 무엇을 바꾸는지는 Step 3에서 다시 본다.
+  hold-duration: 5m
+
 spring:
   application:
     name: ticketing
