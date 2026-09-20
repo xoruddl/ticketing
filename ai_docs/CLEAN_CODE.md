@@ -37,6 +37,23 @@
 - 도메인 규칙 위반은 도메인 예외로 던진다. 메시지에 **무엇이 왜** 실패했는지 적는다
 - 예외를 잡아서 삼키지 않는다. 잡았으면 처리하거나 감싸서 다시 던진다
 
+**어떤 예외를 쓰는가**
+
+- 엔티티·값 객체의 불변식 위반(null, 음수 가격 등)은 `IllegalArgumentException`으로 던지고, 메시지는 검증 코드 옆에 둔다. 따로 모으지 않는다
+- 사용자 요청 때문에 생기는 실패(없는 회차, 이미 선점된 좌석 등)는 **전용 도메인 예외**로 던진다. `IllegalArgumentException`으로 던지면 불변식 위반과 구분할 수 없다
+- 도메인 예외는 응답에 필요한 값(예: `scheduleId`)을 필드로 든다. 메시지를 파싱하지 않기 위해서다
+
+**예외를 HTTP 응답으로 바꾸는 곳**
+
+- 도메인 예외는 **HTTP를 모른다.** `HttpStatus`를 들지 않고 `org.springframework.http`를 import하지 않는다
+  (같은 실패도 API마다 알맞은 상태 코드가 다르고, 도메인은 스케줄러 등 HTTP가 아닌 곳에서도 불린다)
+- 에러 코드는 **모듈 안 `web` 패키지의 enum**에 둔다. 예: `booking.web.BookingErrorCode`(HTTP 상태 + 공통 메시지)
+  - 전역 `ErrorCode`(`sharedkernel`)는 두지 않는다. 모든 모듈이 한 파일에 의존하게 되어 모듈 경계 목표와 충돌한다
+  - `messages.properties`는 쓰지 않는다
+- 예외 → 에러 코드 매핑과 응답 생성은 모듈의 `@RestControllerAdvice`(예: `BookingExceptionHandler`)가 한다. 컨트롤러·서비스에 `try-catch`를 두지 않는다
+- 응답은 RFC 9457 `ProblemDetail`로 하고, 에러 종류는 `code` 속성(enum 상수 이름)으로 알린다. **상수 이름을 바꾸는 것은 API를 깨는 변경이다**
+- 예외를 추가하면 도메인 예외, 에러 코드, 핸들러 메서드를 함께 늘린다. 이 번거로움은 도메인을 HTTP에서 떼어 놓는 대가로 받아들인다
+
 ---
 
 ## SOLID
