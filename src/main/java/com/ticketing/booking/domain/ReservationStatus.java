@@ -1,5 +1,9 @@
 package com.ticketing.booking.domain;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * 예약의 상태. 사용자에게 보이는 그대로다.
  *
@@ -18,6 +22,25 @@ public enum ReservationStatus {
   EXPIRED,
   /** 취소됨. */
   CANCELED;
+
+  /**
+   * 좌석을 차지하는 상태 전부. 상수로 적지 않고 {@link #occupiesSeat()}에서 뽑아내, 상태가 늘어도 규칙이 한
+   * 곳에만 있게 한다.
+   */
+  private static final Set<ReservationStatus> OCCUPYING =
+      Arrays.stream(values())
+          .filter(ReservationStatus::occupiesSeat)
+          .collect(Collectors.toUnmodifiableSet());
+
+  /**
+   * 좌석을 차지하는 상태들. 이 상태의 예약이 하나라도 있으면 그 회차·좌석은 팔린 것이다.
+   *
+   * 상태를 하나씩 묻는 {@link #occupiesSeat()}와 달리, 여러 상태를 한 번에 넘겨야 하는 저장소 조회 조건으로 쓴다
+   * ({@link ReservationRepository#existsBySeatAndStatusIn}).
+   */
+  public static Set<ReservationStatus> occupying() {
+    return OCCUPYING;
+  }
 
   /**
    * 이 상태의 예약이 좌석을 차지하고 있는가. 다른 사용자의 선점을 거절할지, 좌석을 예매 가능으로 보일지 판단할 때 쓴다.
