@@ -1,11 +1,14 @@
 package com.ticketing.booking.application;
 
+import com.ticketing.booking.domain.ReservationRepository;
+import com.ticketing.booking.domain.ReservationStatus;
 import com.ticketing.booking.domain.Schedule;
 import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.ScheduleRepository;
 import com.ticketing.booking.domain.Seat;
 import com.ticketing.booking.domain.SeatRepository;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,31 @@ public class SeatQueryService {
 
   private final ScheduleRepository scheduleRepository;
   private final SeatRepository seatRepository;
+  private final ReservationRepository reservationRepository;
+
+  /**
+   * 회차의 좌석을 예매 가능 여부와 함께 id 순으로 돌려준다.
+   *
+   * 조회를 두 번 한다. 좌석 목록 한 번, 그 회차에서 차지된 좌석 ID 한 번. 좌석마다 팔렸는지 묻지 않는 이유는
+   * 좌석이 N개면 조회도 N번이 되기 때문이다({@link ReservationRepository#findOccupiedSeatIds} 주석 참고).
+   *
+   * 예매 가능 여부는 어디에도 저장되어 있지 않다. 좌석 표에는 그런 컬럼이 없고, 여기서 두 결과를 대조해 만든다.
+   * 같은 좌석이라도 회차가 다르면 답이 다르기 때문이다.
+   *
+   * 어떤 상태가 좌석을 차지하는지는 선점을 거절할 때와 같은 기준을 쓴다({@link ReservationStatus#occupying()}).
+   * 이 둘이 갈라지면 목록에는 예매 가능인데 누르면 거절되는 좌석이 생긴다.
+   */
+  public List<SeatAvailability> findSeatAvailabilities(Long scheduleId) {
+    Schedule schedule =
+        scheduleRepository
+            .findById(scheduleId)
+            .orElseThrow(() -> new ScheduleNotFoundException(scheduleId));
+    Set<Long> occupiedSeatIds =
+        reservationRepository.findOccupiedSeatIds(scheduleId, ReservationStatus.occupying());
+    return seatRepository.findAllByPerformanceIdOrderByIdAsc(schedule.getPerformanceId()).stream()
+        .map(seat -> new SeatAvailability(seat, !occupiedSeatIds.contains(seat.getId())))
+        .toList();
+  }
 
   /**
    * 회차의 좌석 전체를 id 순으로 돌려준다.
