@@ -72,9 +72,13 @@ class SeatQueryServiceTest {
                 stage.schedule().getPerformanceId(), LocalDateTime.of(2026, 12, 25, 19, 0)));
     reservationService.hold(otherSchedule.getId(), stage.seatId(0), USER_ID);
 
-    List<SeatAvailability> seats = seatQueryService.findSeatAvailabilities(stage.scheduleId());
-
-    assertThat(seats).allMatch(SeatAvailability::available);
+    assertThat(seatQueryService.findSeatAvailabilities(stage.scheduleId()))
+        .allMatch(SeatAvailability::available);
+    // 선점한 회차에서는 실제로 막혀 있어야 한다. 이 단언이 없으면 선점이 아무 일도 하지 않았을 때도
+    // 위 단언이 그냥 통과해, 회차가 갈라져 있다는 것을 확인하지 못한 채 초록이 된다.
+    assertThat(seatQueryService.findSeatAvailabilities(otherSchedule.getId()))
+        .extracting(SeatAvailability::available)
+        .containsExactly(false, true);
   }
 
   /**
