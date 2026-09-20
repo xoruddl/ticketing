@@ -3,11 +3,9 @@ package com.ticketing.booking.domain;
 /**
  * 예약의 상태. 사용자에게 보이는 그대로다.
  *
- * <pre>
  * HELD ──결제 성공──▶ CONFIRMED ──취소──▶ CANCELED
  *   │
  *   └──유효 시간 초과──▶ EXPIRED
- * </pre>
  *
  * DB에는 이름으로 저장한다 (V2 마이그레이션의 status 컬럼).
  */
