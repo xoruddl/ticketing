@@ -11,6 +11,7 @@ import com.ticketing.booking.domain.ReservationStatus;
 import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,14 @@ class ReservationServiceTest {
 
   @Autowired ReservationService reservationService;
   @Autowired BookingFixture fixture;
+
+  /**
+   * 만료 시각을 만든 시계와 같은 시계로 비교한다.
+   *
+   * 앱은 서울 기준 시계를 쓴다(ClockConfiguration). 여기서 LocalDateTime.now()를 쓰면 테스트를 돌리는 호스트의
+   * 타임존을 따르게 되고, 서울보다 동쪽에서 돌리면 방금 만든 만료 시각이 과거로 보여 테스트가 실패한다.
+   */
+  @Autowired Clock clock;
 
   @Test
   void 좌석을_선점하면_선점_상태로_저장된다() {
@@ -48,8 +57,8 @@ class ReservationServiceTest {
 
     Reservation reservation = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
 
-    assertThat(reservation.getExpiresAt()).isAfter(LocalDateTime.now());
-    assertThat(reservation.isExpired(LocalDateTime.now())).isFalse();
+    assertThat(reservation.getExpiresAt()).isAfter(LocalDateTime.now(clock));
+    assertThat(reservation.isExpired(LocalDateTime.now(clock))).isFalse();
   }
 
   @Test
