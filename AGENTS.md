@@ -68,6 +68,7 @@ app  →  reservation · payment · ticket  →  user  →  shared-kernel
 
 | 문서 | 역할 |
 |---|---|
+| `ai_docs/ARCHITECTURE.md` | C4 세 층으로 본 시스템 구조와 앞으로 생길 것 |
 | `ai_docs/FEATURES.md` | 만들 기능의 범위 |
 | `ai_docs/CONTRIBUTING.md` | 브랜치 전략, 커밋 컨벤션, PR, 포맷, CI |
 | `ai_docs/CLEAN_CODE.md` | 클린코드 체크리스트, SOLID |
