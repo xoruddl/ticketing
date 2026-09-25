@@ -26,7 +26,33 @@ public enum BookingErrorCode {
    *
    * 400이 아니라 409다. 요청이 틀린 것이 아니라 좌석의 상태가 바뀐 것이고, 나중에는 같은 요청이 성공할 수도 있다.
    */
-  SEAT_ALREADY_TAKEN(HttpStatus.CONFLICT, "이미 팔린 좌석이다");
+  SEAT_ALREADY_TAKEN(HttpStatus.CONFLICT, "이미 팔린 좌석이다"),
+
+  /** 요청한 예약이 없다. 대응 예외: ReservationNotFoundException */
+  RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예약을 찾을 수 없다"),
+
+  /**
+   * 다른 사용자의 예약에 결제하려 했다. 대응 예외: ReservationNotOwnedException
+   *
+   * 404로 숨기지 않고 403으로 답한다. 인증이 아직 없어 "그런 예약이 있다"는 사실을 숨겨도 막아주는 것이 없고,
+   * 숨기면 클라이언트가 예약 ID를 잘못 보낸 것인지 사용자를 잘못 보낸 것인지 구분할 수 없다.
+   */
+  RESERVATION_NOT_OWNED(HttpStatus.FORBIDDEN, "다른 사용자의 예약이다"),
+
+  /**
+   * 선점 유효 시간이 지난 예약에 결제하려 했다. 대응 예외: ReservationExpiredException
+   *
+   * 409다. 요청 모양은 맞고 예약의 상태(시간)가 결제를 허락하지 않는 것이다. 사용자는 좌석을 다시 선점해야 한다.
+   */
+  RESERVATION_EXPIRED(HttpStatus.CONFLICT, "선점 유효 시간이 지났다"),
+
+  /**
+   * 선점 상태가 아닌 예약에 결제하려 했다. 대응 예외: ReservationNotHeldException
+   *
+   * 이미 결제한 예약에 한 번 더 보낸 경우가 대표적이다. RESERVATION_EXPIRED와 코드를 나눈 이유는 사용자에게 할
+   * 말이 달라서다. 만료는 "다시 선점하라", 이쪽은 "이미 끝났다"이다.
+   */
+  RESERVATION_NOT_HELD(HttpStatus.CONFLICT, "선점 상태가 아닌 예약이다");
 
   /** 응답 상태 코드. */
   private final HttpStatus status;

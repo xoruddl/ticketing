@@ -1,5 +1,9 @@
 package com.ticketing.booking.web;
 
+import com.ticketing.booking.domain.ReservationExpiredException;
+import com.ticketing.booking.domain.ReservationNotFoundException;
+import com.ticketing.booking.domain.ReservationNotHeldException;
+import com.ticketing.booking.domain.ReservationNotOwnedException;
 import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
@@ -38,6 +42,27 @@ public class BookingExceptionHandler {
   @ExceptionHandler(SeatAlreadyTakenException.class)
   public ProblemDetail handle(SeatAlreadyTakenException e) {
     return problem(BookingErrorCode.SEAT_ALREADY_TAKEN, e.getSeat().seatId());
+  }
+
+  @ExceptionHandler(ReservationNotFoundException.class)
+  public ProblemDetail handle(ReservationNotFoundException e) {
+    return problem(BookingErrorCode.RESERVATION_NOT_FOUND, e.getReservationId());
+  }
+
+  /** 응답에는 예약 ID만 담는다. 예약의 주인이 누구인지는 남의 정보라 내보내지 않는다. */
+  @ExceptionHandler(ReservationNotOwnedException.class)
+  public ProblemDetail handle(ReservationNotOwnedException e) {
+    return problem(BookingErrorCode.RESERVATION_NOT_OWNED, e.getReservationId());
+  }
+
+  @ExceptionHandler(ReservationExpiredException.class)
+  public ProblemDetail handle(ReservationExpiredException e) {
+    return problem(BookingErrorCode.RESERVATION_EXPIRED, e.getReservationId());
+  }
+
+  @ExceptionHandler(ReservationNotHeldException.class)
+  public ProblemDetail handle(ReservationNotHeldException e) {
+    return problem(BookingErrorCode.RESERVATION_NOT_HELD, e.getReservationId());
   }
 
   /**
