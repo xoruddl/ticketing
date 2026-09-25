@@ -59,4 +59,51 @@ class ReservationTest {
 
     assertThat(reservation.isExpired(EXPIRES_AT.plusMinutes(1))).isTrue();
   }
+
+  @Test
+  void 선점한_사용자의_예약이다() {
+    Reservation reservation = Reservation.hold(SEAT, 7L, EXPIRES_AT);
+
+    assertThat(reservation.isOwnedBy(7L)).isTrue();
+    assertThat(reservation.isOwnedBy(8L)).isFalse();
+  }
+
+  /** 확정되어도 좌석은 계속 차지된다. 선점이 확정으로 바뀔 뿐 좌석이 풀리는 순간은 없다. */
+  @Test
+  void 만료_전에_확정하면_확정_상태가_된다() {
+    Reservation reservation = Reservation.hold(SEAT, 7L, EXPIRES_AT);
+
+    reservation.confirm(EXPIRES_AT.minusMinutes(1));
+
+    assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+    assertThat(reservation.getStatus().occupiesSeat()).isTrue();
+  }
+
+  /** 만료 판정과 같은 경계를 쓴다. 만료 시각과 같은 순간의 결제는 거절한다. */
+  @Test
+  void 만료_시각에는_확정할_수_없다() {
+    Reservation reservation = Reservation.hold(SEAT, 7L, EXPIRES_AT);
+
+    assertThatThrownBy(() -> reservation.confirm(EXPIRES_AT))
+        .isInstanceOf(ReservationExpiredException.class);
+  }
+
+  /** 거절만 하고 상태는 바꾸지 않는다. 만료된 선점을 EXPIRED로 바꾸는 일은 Step 3에서 정한다. */
+  @Test
+  void 만료되어_거절해도_상태는_선점_그대로다() {
+    Reservation reservation = Reservation.hold(SEAT, 7L, EXPIRES_AT);
+
+    assertThatThrownBy(() -> reservation.confirm(EXPIRES_AT.plusMinutes(1)))
+        .isInstanceOf(ReservationExpiredException.class);
+    assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
+  }
+
+  @Test
+  void 이미_확정된_예약은_다시_확정할_수_없다() {
+    Reservation reservation = Reservation.hold(SEAT, 7L, EXPIRES_AT);
+    reservation.confirm(EXPIRES_AT.minusMinutes(1));
+
+    assertThatThrownBy(() -> reservation.confirm(EXPIRES_AT.minusMinutes(1)))
+        .isInstanceOf(ReservationNotHeldException.class);
+  }
 }
