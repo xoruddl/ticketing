@@ -2,8 +2,11 @@ package com.ticketing.booking;
 
 import com.ticketing.booking.domain.Performance;
 import com.ticketing.booking.domain.PerformanceRepository;
+import com.ticketing.booking.domain.Reservation;
+import com.ticketing.booking.domain.ReservationRepository;
 import com.ticketing.booking.domain.Schedule;
 import com.ticketing.booking.domain.ScheduleRepository;
+import com.ticketing.booking.domain.ScheduledSeat;
 import com.ticketing.booking.domain.Seat;
 import com.ticketing.booking.domain.SeatGrade;
 import com.ticketing.booking.domain.SeatPosition;
@@ -32,10 +35,14 @@ public class BookingFixture {
   /** 픽스처 좌석의 가격. 테스트가 응답 가격이나 결제 금액을 비교할 때 숫자를 따로 쓰지 않고 이 값을 기준으로 쓴다. */
   public static final long SEAT_PRICE = 150_000L;
 
+  /** 만료된 선점의 만료 시각. 테스트를 언제 돌려도 과거가 되도록 충분히 이른 시각으로 고정한다. */
+  private static final LocalDateTime EXPIRED_AT = LocalDateTime.of(2020, 1, 1, 0, 0);
+
   // 실제 DB(Testcontainers MySQL)에 저장한다. 생성자는 Lombok이 만들고 스프링이 주입한다.
   private final PerformanceRepository performanceRepository;
   private final ScheduleRepository scheduleRepository;
   private final SeatRepository seatRepository;
+  private final ReservationRepository reservationRepository;
 
   /**
    * 공연 1개, 회차 1개, 좌석 seatCount개를 저장한다.
@@ -56,6 +63,19 @@ public class BookingFixture {
             .toList();
     // saveAll이 돌려준 목록을 쓴다. 테스트가 좌석 ID를 꺼내 써야 하기 때문이다.
     return new Stage(schedule, seatRepository.saveAll(seats));
+  }
+
+  /**
+   * 만료 시각이 이미 지난 선점을 저장한다. 만료된 선점으로 결제하면 거절되는지 볼 때 쓴다.
+   *
+   * 선점 API(ReservationService)를 거치지 않고 저장소로 바로 넣는다. API로 만들면 만료 시각이 "지금 + 5분"으로
+   * 박혀서, 만료를 보려면 시계를 바꾸거나 5분을 기다려야 한다. 여기서는 만료 시각만 과거로 두면 된다.
+   *
+   * 상태는 HELD 그대로다. Step 0은 만료된 선점을 EXPIRED로 바꿔주지 않으므로, 실제로도 이런 행이 남는다.
+   */
+  public Reservation createExpiredHold(Stage stage, int seatIndex, Long userId) {
+    ScheduledSeat seat = new ScheduledSeat(stage.scheduleId(), stage.seatId(seatIndex));
+    return reservationRepository.save(Reservation.hold(seat, userId, EXPIRED_AT));
   }
 
   /**
