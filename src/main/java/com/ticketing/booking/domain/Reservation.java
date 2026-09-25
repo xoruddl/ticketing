@@ -80,4 +80,31 @@ public class Reservation {
   public boolean isExpired(LocalDateTime now) {
     return !now.isBefore(expiresAt);
   }
+
+  /** 이 사용자가 선점한 예약인가. 결제처럼 본인만 할 수 있는 일을 막을 때 쓴다. */
+  public boolean isOwnedBy(Long userId) {
+    return this.userId.equals(userId);
+  }
+
+  /**
+   * 결제가 끝난 선점을 확정한다. HELD → CONFIRMED
+   *
+   * 거절하는 경우
+   * - 선점 상태가 아니다(이미 확정·취소·만료): ReservationNotHeldException
+   * - 선점 유효 시간이 지났다: ReservationExpiredException
+   *
+   * 상태를 먼저 본다. 이미 확정된 예약은 만료 시각이 지났더라도 "만료"가 아니라 "이미 확정"이 맞는 답이다.
+   *
+   * 만료되어 거절할 때 상태를 EXPIRED로 바꾸지 않는다. 거절은 예외로 끝나 트랜잭션이 롤백되므로 여기서 바꿔도 남지
+   * 않고, 만료를 누가 언제 반영할지는 Step 3에서 정한다.
+   */
+  public void confirm(LocalDateTime now) {
+    if (status != ReservationStatus.HELD) {
+      throw new ReservationNotHeldException(id, status);
+    }
+    if (isExpired(now)) {
+      throw new ReservationExpiredException(id, expiresAt);
+    }
+    this.status = ReservationStatus.CONFIRMED;
+  }
 }
