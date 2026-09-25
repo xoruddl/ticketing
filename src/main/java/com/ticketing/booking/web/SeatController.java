@@ -14,9 +14,11 @@ public class SeatController {
 
   private final SeatQueryService seatQueryService;
 
-  /** 회차의 좌석 목록. 예: GET /schedules/10/seats */
+  /** 회차의 좌석 목록과 좌석마다 예매 가능 여부. 예: GET /schedules/10/seats */
   @GetMapping("/schedules/{scheduleId}/seats")
   public List<SeatResponse> findSeats(@PathVariable Long scheduleId) {
-    return seatQueryService.findSeats(scheduleId).stream().map(SeatResponse::from).toList();
+    return seatQueryService.findSeatAvailabilities(scheduleId).stream()
+        .map(SeatResponse::from)
+        .toList();
   }
 }

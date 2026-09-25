@@ -31,9 +31,12 @@ class SeatQueryTest {
     // seatId는 DB가 매기므로 실행마다 다르다. 그래서 숫자 대신 stage.seatId(n)과 비교한다.
     // 200 application/json
     // [
-    //   {"seatId":101,"section":"A","rowName":"1","seatNumber":1,"grade":"VIP","price":150000},
-    //   {"seatId":102,"section":"A","rowName":"1","seatNumber":2,"grade":"VIP","price":150000},
-    //   {"seatId":103,"section":"A","rowName":"1","seatNumber":3,"grade":"VIP","price":150000}
+    //
+    // {"seatId":101,"section":"A","rowName":"1","seatNumber":1,"grade":"VIP","price":150000,"available":true},
+    //
+    // {"seatId":102,"section":"A","rowName":"1","seatNumber":2,"grade":"VIP","price":150000,"available":true},
+    //
+    // {"seatId":103,"section":"A","rowName":"1","seatNumber":3,"grade":"VIP","price":150000,"available":true}
     // ]
     assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
         .hasStatusOk()
@@ -52,6 +55,38 @@ class SeatQueryTest {
               assertThat(json)
                   .extractingPath("$[0].price")
                   .isEqualTo((int) BookingFixture.SEAT_PRICE);
+            });
+  }
+
+  /**
+   * 선점된 좌석은 목록에 남아 있되 예매 불가로 표시된다.
+   *
+   * 좌석을 목록에서 빼지 않는 이유: 화면은 좌석 배치도를 그대로 그리고 팔린 자리만 회색으로 칠한다. 빠지면 배치도에 구멍이
+   * 생긴다.
+   */
+  @Test
+  void 선점된_좌석은_예매_불가로_응답한다() {
+    Stage stage = fixture.createStage(2);
+    // 저장소로 예약을 직접 넣지 않고 선점 API를 거친다. 사용자가 실제로 겪는 순서(선점 → 목록 새로고침) 그대로 본다.
+    holdSeat(stage.scheduleId(), stage.seatId(0));
+
+    // 200 application/json
+    // [
+    //
+    // {"seatId":101,"section":"A","rowName":"1","seatNumber":1,"grade":"VIP","price":150000,"available":false},
+    //
+    // {"seatId":102,"section":"A","rowName":"1","seatNumber":2,"grade":"VIP","price":150000,"available":true}
+    // ]
+    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
+        .hasStatusOk()
+        .bodyJson()
+        .satisfies(
+            json -> {
+              // 선점된 좌석도 목록에서 빠지지 않는다.
+              assertThat(json).extractingPath("$.length()").isEqualTo(2);
+              assertThat(json).extractingPath("$[0].available").isEqualTo(false);
+              // 선점하지 않은 옆 좌석은 그대로 예매할 수 있다.
+              assertThat(json).extractingPath("$[1].available").isEqualTo(true);
             });
   }
 
@@ -83,5 +118,25 @@ class SeatQueryTest {
               // instance는 핸들러가 채우지 않아도 Spring이 요청 경로로 채운다.
               assertThat(json).extractingPath("$.instance").isEqualTo("/schedules/0/seats");
             });
+  }
+
+  /**
+   * 선점 API로 좌석 하나를 선점한다. 누가 선점했는지는 이 테스트의 관심이 아니라 사용자 ID는 고정한다.
+   *
+   * exchange()로 바로 실행하고, 201인지 확인해 둔다. 선점이 조용히 실패하면 아래 단언이 엉뚱한 이유로 깨지기 때문이다.
+   */
+  private void holdSeat(long scheduleId, long seatId) {
+    String body =
+        """
+        {"scheduleId":%d,"seatId":%d,"userId":7}
+        """
+            .formatted(scheduleId, seatId);
+    assertThat(
+            mvc.post()
+                .uri("/reservations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .exchange())
+        .hasStatus(HttpStatus.CREATED);
   }
 }

@@ -1,7 +1,10 @@
 package com.ticketing.booking.domain;
 
 import java.util.Collection;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /** 예약 저장소. 좌석이 팔렸는지는 좌석이 아니라 이 표의 예약으로 판단한다({@link Reservation} 주석 참고). */
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -17,4 +20,24 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
    * 이 확인과 저장 사이에 다른 요청이 끼어들 수 있다. Step 0은 막지 않는다 — Step 1에서 재현할 대상이다.
    */
   boolean existsBySeatAndStatusIn(ScheduledSeat seat, Collection<ReservationStatus> statuses);
+
+  /**
+   * 이 회차에서 이미 차지된 좌석의 ID 전부. 좌석 목록에 예매 가능 여부를 채울 때 쓴다.
+   *
+   * 좌석을 하나씩 {@link #existsBySeatAndStatusIn}으로 묻지 않는 이유는, 좌석이 N개면 조회도 N번이 되기
+   * 때문이다. 한 번에 가져와 메모리에서 대조한다.
+   *
+   * 예약 행 전체가 아니라 seat_id만 읽는다. 여기서 필요한 것은 "어느 좌석이 팔렸는가"뿐이다.
+   *
+   * 돌려주는 것이 Set인 이유: 지금은 같은 좌석에 예약이 둘 생길 수 있다. 막는 장치가 없어서다(Step 1에서
+   * 재현한다). 중복은 여기서 접고, 부르는 쪽은 좌석 ID가 있는지만 본다.
+   */
+  @Query(
+      """
+      select r.seat.seatId from Reservation r
+      where r.seat.scheduleId = :scheduleId and r.status in :statuses
+      """)
+  Set<Long> findOccupiedSeatIds(
+      @Param("scheduleId") Long scheduleId,
+      @Param("statuses") Collection<ReservationStatus> statuses);
 }
