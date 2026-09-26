@@ -116,11 +116,11 @@ class SeatHoldTest {
   /**
    * 값이 비었는지는 서비스까지 가지 않고 요청 검증이 막는다.
    *
-   * 이 400에는 본문이 없다. 다른 거절은 ProblemDetail에 code를 실어 보내는데 검증 실패만 빈 응답이라, 받는 쪽이
-   * 무엇이 잘못됐는지 알 수 없다. 상태 코드만 확인해 두고 응답 형식은 따로 맞춘다.
+   * 검증 실패도 다른 거절과 같은 ProblemDetail 형식으로 나간다. 받는 쪽은 code로 종류를, detail로 어느 값이
+   * 비었는지를 안다.
    */
   @Test
-  void 좌석_없이_선점하면_400을_응답한다() {
+  void 좌석_없이_선점하면_400과_에러_코드를_응답한다() {
     Stage stage = fixture.createStage(1);
     String body =
         """
@@ -130,7 +130,13 @@ class SeatHoldTest {
 
     assertThat(
             mvc.post().uri("/reservations").contentType(MediaType.APPLICATION_JSON).content(body))
-        .hasStatus(HttpStatus.BAD_REQUEST);
+        .hasStatus(HttpStatus.BAD_REQUEST)
+        .bodyJson()
+        .satisfies(
+            json -> {
+              assertThat(json).extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+              assertThat(json).extractingPath("$.detail").asString().contains("seatId");
+            });
   }
 
   /**
