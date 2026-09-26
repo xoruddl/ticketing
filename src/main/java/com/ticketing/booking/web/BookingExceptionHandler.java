@@ -7,7 +7,10 @@ import com.ticketing.booking.domain.ReservationNotOwnedException;
 import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
+import java.util.List;
 import org.springframework.http.ProblemDetail;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,6 +27,23 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class BookingExceptionHandler {
+
+  /**
+   * 요청 값 검증(@Valid) 실패. 이 핸들러가 없으면 Spring 기본 처리로 본문 없는 400이 나가, 받는 쪽이 code로 구분할 수 없다.
+   *
+   * 응답에는 비어 있던 필드 이름을 담는다. 여럿이면 순서가 요청마다 달라지지 않게 정렬한다. 예: "요청 값이 올바르지 않다:
+   * [seatId, userId]"
+   */
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ProblemDetail handle(MethodArgumentNotValidException e) {
+    List<String> fields =
+        e.getBindingResult().getFieldErrors().stream()
+            .map(FieldError::getField)
+            .distinct()
+            .sorted()
+            .toList();
+    return problem(BookingErrorCode.INVALID_REQUEST, fields);
+  }
 
   @ExceptionHandler(ScheduleNotFoundException.class)
   public ProblemDetail handle(ScheduleNotFoundException e) {
