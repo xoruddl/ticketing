@@ -15,6 +15,14 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum BookingErrorCode {
+  /**
+   * 요청 값이 비었다. 대응 예외: MethodArgumentNotValidException (요청 검증 실패)
+   *
+   * 도메인 예외가 아니라 Spring이 던지는 예외에 대응하는 유일한 코드다. 서비스까지 가기 전에 막히지만, 받는 쪽이 다른
+   * 거절과 같은 방식으로 구분할 수 있게 코드를 준다. 예: 좌석 없이 선점 → "요청 값이 올바르지 않다: seatId"
+   */
+  INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않다"),
+
   /** 요청한 회차가 없다. 대응 예외: ScheduleNotFoundException */
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "회차를 찾을 수 없다"),
 
