@@ -1,6 +1,7 @@
 package com.ticketing.booking.domain;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,4 +41,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
   Set<Long> findOccupiedSeatIds(
       @Param("scheduleId") Long scheduleId,
       @Param("statuses") Collection<ReservationStatus> statuses);
+
+  /**
+   * 이 사용자의 예약 전부, 최근에 만든 것부터. 내 예매 목록(GET /reservations?userId=)에 쓴다.
+   *
+   * 상태로 거르지 않는다. 만료·취소된 예약도 사용자에게는 "내가 했던 예매"라 목록에 보인다.
+   *
+   * 최근 순은 id 역순으로 정한다. 예약에 만든 시각 컬럼이 없고, auto_increment id가 만든 순서를 따른다.
+   * user_id 조건은 V2의 idx_reservation_user 인덱스를 탄다. 페이지 나누기는 하지 않는다.
+   */
+  List<Reservation> findAllByUserIdOrderByIdDesc(Long userId);
 }

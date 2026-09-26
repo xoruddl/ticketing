@@ -13,6 +13,7 @@ import com.ticketing.booking.domain.SeatPosition;
 import com.ticketing.booking.domain.SeatRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.test.context.TestComponent;
@@ -37,6 +38,13 @@ public class BookingFixture {
 
   /** 만료된 선점의 만료 시각. 테스트를 언제 돌려도 과거가 되도록 충분히 이른 시각으로 고정한다. */
   private static final LocalDateTime EXPIRED_AT = LocalDateTime.of(2020, 1, 1, 0, 0);
+
+  /**
+   * {@link #newUserId()}가 다음에 줄 사용자 ID. 테스트들이 상수로 쓰는 7, 8 같은 작은 값과 겹치지 않게 크게 시작한다.
+   *
+   * static인 이유: 테스트 클래스마다 픽스처 빈이 따로 생겨도 JVM 안에서 한 번 준 값을 다시 주지 않게 한다.
+   */
+  private static final AtomicLong NEXT_USER_ID = new AtomicLong(1_000_000L);
 
   // 실제 DB(Testcontainers MySQL)에 저장한다. 생성자는 Lombok이 만들고 스프링이 주입한다.
   private final PerformanceRepository performanceRepository;
@@ -76,6 +84,16 @@ public class BookingFixture {
   public Reservation createExpiredHold(Stage stage, int seatIndex, Long userId) {
     ScheduledSeat seat = new ScheduledSeat(stage.scheduleId(), stage.seatId(seatIndex));
     return reservationRepository.save(Reservation.hold(seat, userId, EXPIRED_AT));
+  }
+
+  /**
+   * 다른 테스트가 쓰지 않은 사용자 ID. 내 예매 목록처럼 사용자 기준으로 모아 보는 테스트에 쓴다.
+   *
+   * 통합 테스트들은 같은 DB를 함께 쓰므로, 상수 사용자(예: 7번)로 목록을 조회하면 다른 테스트가 만든 예약까지 섞여
+   * 나온다. 공연을 부를 때마다 새로 만드는 것({@link #createStage})과 같은 이유다.
+   */
+  public static Long newUserId() {
+    return NEXT_USER_ID.getAndIncrement();
   }
 
   /**
