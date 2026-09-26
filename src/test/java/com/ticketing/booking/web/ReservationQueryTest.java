@@ -138,6 +138,23 @@ class ReservationQueryTest {
         .isEqualTo("[]");
   }
 
+  /** 본문이 아니라 쿼리 파라미터가 빠진 경우다. 본문 검증 실패(SeatHoldTest의 400)와 같은 코드로 나가야 한다. */
+  @Test
+  void 사용자_없이_목록을_조회하면_400과_에러_코드를_응답한다() {
+    // 400 application/problem+json
+    // {"detail":"요청 값이 올바르지 않다: [userId]","instance":"/reservations","status":400,
+    //  "title":"Bad Request","code":"INVALID_REQUEST"}
+    assertThat(mvc.get().uri("/reservations"))
+        .hasStatus(HttpStatus.BAD_REQUEST)
+        .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .bodyJson()
+        .satisfies(
+            json -> {
+              assertThat(json).extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+              assertThat(json).extractingPath("$.detail").asString().contains("userId");
+            });
+  }
+
   /** 새 공연의 좌석 하나를 이 사용자로 선점한다. 테스트마다 새 공연이라 서로 좌석이 겹치지 않는다. */
   private Reservation hold(long userId) {
     Stage stage = fixture.createStage(1);
