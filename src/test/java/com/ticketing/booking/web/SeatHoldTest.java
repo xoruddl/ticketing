@@ -57,7 +57,7 @@ class SeatHoldTest {
             });
   }
 
-  /** 새 자원을 만들었으므로 어디서 찾는지 알려준다. 조회 API는 아직 없다. */
+  /** 새 자원을 만들었으므로 어디서 찾는지 알려준다. 그 주소의 조회는 ReservationQueryTest가 본다. */
   @Test
   void 선점_응답은_예약_위치를_알려준다() {
     Stage stage = fixture.createStage(1);
