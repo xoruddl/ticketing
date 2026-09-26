@@ -115,7 +115,7 @@ class ReservationPaymentTest {
 
   /** 누가 결제하는지 없으면 서비스까지 가지 않고 요청 검증이 막는다. 본문 형식은 SeatHoldTest의 400과 같다. */
   @Test
-  void 사용자_없이_결제하면_400을_응답한다() {
+  void 사용자_없이_결제하면_400과_에러_코드를_응답한다() {
     Reservation held = hold(USER_ID);
 
     assertThat(
@@ -123,7 +123,13 @@ class ReservationPaymentTest {
                 .uri("/reservations/{reservationId}/payment", held.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
-        .hasStatus(HttpStatus.BAD_REQUEST);
+        .hasStatus(HttpStatus.BAD_REQUEST)
+        .bodyJson()
+        .satisfies(
+            json -> {
+              assertThat(json).extractingPath("$.code").isEqualTo("INVALID_REQUEST");
+              assertThat(json).extractingPath("$.detail").asString().contains("userId");
+            });
   }
 
   /** 새 공연의 좌석 하나를 이 사용자로 선점한다. 테스트마다 새 공연이라 서로 좌석이 겹치지 않는다. */
