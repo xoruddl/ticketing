@@ -11,6 +11,7 @@ import java.util.List;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -43,6 +44,17 @@ public class BookingExceptionHandler {
             .sorted()
             .toList();
     return problem(BookingErrorCode.INVALID_REQUEST, fields);
+  }
+
+  /**
+   * 필수 쿼리 파라미터가 빠졌다. 예: GET /reservations (userId 없음)
+   *
+   * 본문 검증 실패와 Spring이 던지는 예외는 다르지만, 받는 쪽에게는 똑같이 "요청 값이 비었다"이므로 같은 코드로 답한다.
+   * 형식도 위 핸들러와 맞춰 빠진 이름을 목록으로 담는다. 예: "요청 값이 올바르지 않다: [userId]"
+   */
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ProblemDetail handle(MissingServletRequestParameterException e) {
+    return problem(BookingErrorCode.INVALID_REQUEST, List.of(e.getParameterName()));
   }
 
   @ExceptionHandler(ScheduleNotFoundException.class)

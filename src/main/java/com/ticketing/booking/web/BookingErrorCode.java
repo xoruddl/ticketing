@@ -16,10 +16,12 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum BookingErrorCode {
   /**
-   * 요청 값이 비었다. 대응 예외: MethodArgumentNotValidException (요청 검증 실패)
+   * 요청 값이 비었다. 대응 예외: MethodArgumentNotValidException (본문 검증 실패),
+   * MissingServletRequestParameterException (필수 쿼리 파라미터 누락)
    *
    * 도메인 예외가 아니라 Spring이 던지는 예외에 대응하는 유일한 코드다. 서비스까지 가기 전에 막히지만, 받는 쪽이 다른
-   * 거절과 같은 방식으로 구분할 수 있게 코드를 준다. 예: 좌석 없이 선점 → "요청 값이 올바르지 않다: seatId"
+   * 거절과 같은 방식으로 구분할 수 있게 코드를 준다. 예: 좌석 없이 선점 → "요청 값이 올바르지 않다: [seatId]",
+   * 사용자 없이 목록 조회 → "요청 값이 올바르지 않다: [userId]"
    */
   INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않다"),
 
