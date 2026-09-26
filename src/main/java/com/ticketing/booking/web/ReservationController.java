@@ -5,12 +5,14 @@ import com.ticketing.booking.application.ReservationService;
 import com.ticketing.booking.domain.Reservation;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -49,5 +51,20 @@ public class ReservationController {
   @GetMapping("/reservations/{reservationId}")
   public ReservationDetailResponse find(@PathVariable Long reservationId) {
     return ReservationDetailResponse.from(reservationQueryService.find(reservationId));
+  }
+
+  /**
+   * 내 예매 목록을 최근 예약부터 조회한다. 예: GET /reservations?userId=7
+   *
+   * 한 줄은 예약 요약({@link ReservationResponse})이고 결제·티켓은 담지 않는다. 예약이 없으면 빈 배열이다.
+   *
+   * 사용자는 인증이 아직 없어 쿼리 파라미터로 받는다. 선점·결제가 본문으로 받는 것과 같은 임시방편이고, 누구의 목록이든
+   * 볼 수 있다. 사용자를 app이 정하게 되면(Step 4) 이 파라미터는 사라진다.
+   */
+  @GetMapping("/reservations")
+  public List<ReservationResponse> findMine(@RequestParam Long userId) {
+    return reservationQueryService.findAllByUser(userId).stream()
+        .map(ReservationResponse::from)
+        .toList();
   }
 }

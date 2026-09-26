@@ -101,6 +101,43 @@ class ReservationQueryTest {
             json -> assertThat(json).extractingPath("$.code").isEqualTo("RESERVATION_NOT_FOUND"));
   }
 
+  @Test
+  void 내_예매_목록을_조회하면_최근_예약부터_요약으로_나온다() {
+    Long userId = BookingFixture.newUserId();
+    Reservation first = hold(userId);
+    Reservation second = hold(userId);
+    paymentService.pay(first.getId(), userId);
+
+    // 200 application/json
+    // [{"reservationId":2,"scheduleId":11,"seatId":101,"status":"HELD","expiresAt":"..."},
+    //  {"reservationId":1,"scheduleId":10,"seatId":100,"status":"CONFIRMED","expiresAt":"..."}]
+    assertThat(mvc.get().uri("/reservations").param("userId", userId.toString()))
+        .hasStatusOk()
+        .bodyJson()
+        .satisfies(
+            json -> {
+              assertThat(json)
+                  .extractingPath("$[*].reservationId")
+                  .asArray()
+                  .containsExactly(second.getId().intValue(), first.getId().intValue());
+              assertThat(json)
+                  .extractingPath("$[*].status")
+                  .asArray()
+                  .containsExactly("HELD", "CONFIRMED");
+              // 목록은 요약이다. 결제·티켓은 단건 조회에서 본다.
+              assertThat(json).doesNotHavePath("$[0].payment");
+            });
+  }
+
+  @Test
+  void 예약이_없는_사용자의_목록은_빈_배열이다() {
+    assertThat(
+            mvc.get().uri("/reservations").param("userId", BookingFixture.newUserId().toString()))
+        .hasStatusOk()
+        .bodyJson()
+        .isEqualTo("[]");
+  }
+
   /** 새 공연의 좌석 하나를 이 사용자로 선점한다. 테스트마다 새 공연이라 서로 좌석이 겹치지 않는다. */
   private Reservation hold(long userId) {
     Stage stage = fixture.createStage(1);
