@@ -6,7 +6,7 @@ public class TestTicketingApplication {
 
   public static void main(String[] args) {
     SpringApplication.from(TicketingApplication::main)
-        .with(TestcontainersConfiguration.class)
+        .with(TestcontainersConfiguration.class, DevDataConfiguration.class)
         .run(args);
   }
 }
