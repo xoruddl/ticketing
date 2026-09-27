@@ -92,6 +92,34 @@ class ConnectionPoolMetricsTest {
     }
   }
 
+  /** 끝난 뒤가 아니라 지켜보는 도중의 최댓값을 남기는지 본다. 끝난 시점에는 사용 중·대기 수가 이미 돌아와 있다. */
+  @Test
+  void PoolWatcher는_지켜보는_동안의_사용_중_대기_최댓값을_남긴다() throws Exception {
+    PoolWatcher watcher = PoolWatcher.start(dataSource, registry);
+    List<Connection> all = borrowAll();
+    try {
+      CompletableFuture<Connection> waiting = CompletableFuture.supplyAsync(this::borrow);
+      awaitWaitingThreads(1);
+      // 대기가 생긴 걸 이 스레드가 먼저 봤을 수 있다. 샘플링 스레드도 읽을 틈을 준다.
+      Thread.sleep(50);
+
+      all.removeFirst().close();
+      waiting.get(5, TimeUnit.SECONDS).close();
+    } finally {
+      for (Connection connection : all) {
+        connection.close();
+      }
+    }
+    // 다 반납한 뒤에도 몇 번 더 읽게 둔다. 마지막에 읽은 값이 아니라 최댓값을 남기는지 가른다.
+    Thread.sleep(50);
+    PoolWatcher.PoolReport report = watcher.stop();
+
+    assertThat(report.maxActive()).isEqualTo(hikari.getMaximumPoolSize());
+    assertThat(report.maxPending()).isEqualTo(1);
+    assertThat(report.borrowed()).isEqualTo(hikari.getMaximumPoolSize() + 1);
+    assertThat(pool.getActiveConnections()).isLessThan(report.maxActive());
+  }
+
   /**
    * 게이지를 한 번 읽으면 HikariCP가 풀 상태를 1초 동안 캐시한다. 그 사이에 커넥션을 빌려도 게이지는 옛값을 준다.
    * 동시 요청 테스트에서 게이지로 순간값을 샘플링하지 않는 이유다.
