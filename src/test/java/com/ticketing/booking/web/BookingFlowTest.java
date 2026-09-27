@@ -81,6 +81,8 @@ class BookingFlowTest {
     assertThat(paid).hasStatusOk();
     assertThat(read(paid, "$.status", String.class)).isEqualTo("CONFIRMED");
     String ticketCode = read(paid, "$.ticketCode", String.class);
+    // 아래 예약 조회는 이 값과 같은지만 본다. 둘 다 비어 있어도 같다고 통과하지 않게 여기서 막는다.
+    assertThat(ticketCode).isNotBlank();
 
     // 4. 예약 조회: 결제 응답에서 받은 것이 다시 조회해도 그대로 남아 있다(확정이 커밋되었다).
     assertThat(mvc.get().uri("/reservations/{reservationId}", reservationId))
