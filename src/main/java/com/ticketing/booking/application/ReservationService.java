@@ -53,8 +53,7 @@ public class ReservationService {
     }
 
     ScheduledSeat scheduledSeat = new ScheduledSeat(scheduleId, seatId);
-    // 이 확인과 아래 저장 사이에 다른 요청이 끼어들면 같은 좌석에 예약이 둘 생긴다.
-    // Step 0은 막지 않는다. Step 1에서 재현하고 Step 2에서 고른 방법으로 막는다.
+    // Step 0은 동시 요청을 막지 않는다. 동시에 들어오면 어떻게 되는지는 DoubleHoldReproductionTest가 보여준다.
     if (reservationRepository.existsBySeatAndStatusIn(
         scheduledSeat, ReservationStatus.occupying())) {
       throw new SeatAlreadyTakenException(scheduledSeat);
