@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /** 좌석 선점. 실제 DB에 저장하고 거절 규칙을 확인한다. */
 @SpringBootTest
@@ -36,6 +37,8 @@ class ReservationServiceTest {
    * 타임존을 따르게 되고, 서울보다 동쪽에서 돌리면 방금 만든 만료 시각이 과거로 보여 테스트가 실패한다.
    */
   @Autowired Clock clock;
+
+  @Autowired JdbcTemplate jdbc;
 
   @Test
   void 좌석을_선점하면_선점_상태로_저장된다() {
@@ -59,6 +62,25 @@ class ReservationServiceTest {
 
     assertThat(reservation.getExpiresAt()).isAfter(LocalDateTime.now(clock));
     assertThat(reservation.isExpired(LocalDateTime.now(clock))).isFalse();
+  }
+
+  /**
+   * 생성 시각은 엔티티에 없고 DB가 채우는 컬럼이라, 엔티티가 아니라 테이블을 직접 읽는다.
+   *
+   * 행마다 언제 들어왔는지 남아야 동시 요청으로 생긴 행들이 몇 ms 차이로 들어왔는지 볼 수 있다.
+   */
+  @Test
+  void 선점하면_DB가_행의_생성_시각을_남긴다() {
+    Stage stage = fixture.createStage(1);
+
+    Reservation reservation = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+
+    LocalDateTime createdAt =
+        jdbc.queryForObject(
+            "select created_at from reservation where id = ?",
+            LocalDateTime.class,
+            reservation.getId());
+    assertThat(createdAt).isNotNull();
   }
 
   @Test
