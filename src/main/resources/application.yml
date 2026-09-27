@@ -1,0 +1,14 @@
+booking:
+  # 좌석을 선점한 뒤 결제까지 주어지는 시간. 지나면 선점이 만료되고 좌석이 다시 팔린다.
+  # 짧으면 결제하다 놓치는 사람이 늘고, 길면 남은 좌석이 오래 묶인다. 이 값이 무엇을 바꾸는지는 Step 3에서 다시 본다.
+  hold-duration: 5m
+
+spring:
+  application:
+    name: ticketing
+  jpa:
+    hibernate:
+      # 스키마는 Flyway(db/migration)가 만든다. Hibernate는 엔티티와 테이블이 맞는지만 확인하고, 어긋나면 기동을 멈춘다.
+      ddl-auto: validate
+    # 트랜잭션이 끝난 뒤 컨트롤러·뷰에서 지연 로딩이 일어나지 않게 한다. 켜두면 요청 내내 DB 커넥션을 붙잡는다.
+    open-in-view: false
