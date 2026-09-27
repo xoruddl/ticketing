@@ -12,3 +12,10 @@ spring:
       ddl-auto: validate
     # 트랜잭션이 끝난 뒤 컨트롤러·뷰에서 지연 로딩이 일어나지 않게 한다. 켜두면 요청 내내 DB 커넥션을 붙잡는다.
     open-in-view: false
+
+logging:
+  pattern:
+    # 로그 줄마다 요청 ID(RequestIdFilter가 MDC에 넣은 값)를 찍어, 동시 요청의 로그가 뒤섞여도 어느 요청의 것인지 가른다.
+    # Boot 기본 패턴에서 추적 ID가 들어가는 자리다. 시각(ms)·스레드 이름은 기본 패턴에 이미 있다.
+    # 요청 밖(기동·스케줄러)에서 나온 로그는 ID 없이 []로 찍힌다.
+    correlation: "[%X{requestId:-}] "
