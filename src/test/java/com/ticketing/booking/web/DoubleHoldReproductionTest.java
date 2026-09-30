@@ -2,9 +2,12 @@ package com.ticketing.booking.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ticketing.PoolWatcher;
+import com.ticketing.PoolWatcher.PoolReport;
 import com.ticketing.TestcontainersConfiguration;
 import com.ticketing.booking.BookingFixture;
 import com.ticketing.booking.BookingFixture.Stage;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +17,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -57,15 +61,20 @@ class DoubleHoldReproductionTest {
   @LocalServerPort int port;
   @Autowired BookingFixture fixture;
   @Autowired JdbcTemplate jdbc;
+  @Autowired DataSource dataSource;
+  @Autowired MeterRegistry registry;
 
   @Test
   void 같은_좌석에_동시에_선점하면_한_건만_성공한다() throws Exception {
     Stage stage = fixture.createStage(1);
     RestClient client = RestClient.create("http://localhost:" + port);
 
+    // 요청이 몰리는 동안 커넥션을 몇 개 쥐었고 기다린 요청이 있었는지 본다. 막는 방법마다 이 숫자가 달라진다.
+    PoolWatcher watcher = PoolWatcher.start(dataSource, registry);
     List<Result> results = sendAtOnce(client, stage);
+    PoolReport pool = watcher.stop();
     List<Map<String, Object>> rows = reservationsOf(stage);
-    report(results, rows);
+    report(results, rows, pool);
 
     assertThat(results).filteredOn(Result::created).hasSize(1);
     assertThat(rows).hasSize(1);
@@ -129,8 +138,11 @@ class DoubleHoldReproductionTest {
         stage.seatId(0));
   }
 
-  /** 응답과 DB에 남은 것을 로그로 남긴다. 요청 ID로 위쪽 SQL 로그와 맞춰 볼 수 있다. */
-  private void report(List<Result> results, List<Map<String, Object>> rows) {
+  /** 응답과 DB에 남은 것, 커넥션 풀이 어땠는지를 로그로 남긴다. 요청 ID로 위쪽 SQL 로그와 맞춰 볼 수 있다. */
+  private void report(List<Result> results, List<Map<String, Object>> rows, PoolReport pool) {
+    log.info("=== 커넥션 풀 ===");
+    log.info("{}", pool);
+
     log.info("=== 응답 {}건 ===", results.size());
     results.forEach(r -> log.info("요청 {} 사용자 {} -> {}", r.requestId(), r.userId(), r.status()));
 
