@@ -56,7 +56,9 @@ class ConnectionPoolMetricsTest {
 
   @BeforeEach
   void setUp() throws Exception {
+    // unwrap: 이 객체 안에 실제로 들어있는 구현체를 이 타입으로 가져옴
     hikari = dataSource.unwrap(HikariDataSource.class);
+    // 풀이 지금 어떤 상태인가를 봄
     pool = hikari.getHikariPoolMXBean();
   }
 
@@ -103,7 +105,9 @@ class ConnectionPoolMetricsTest {
       // 대기가 생긴 걸 이 스레드가 먼저 봤을 수 있다. 샘플링 스레드도 읽을 틈을 준다.
       Thread.sleep(50);
 
+      // 하나 반납
       all.removeFirst().close();
+      // 대기하던 스레드가 받아가고 바로 반납
       waiting.get(5, TimeUnit.SECONDS).close();
     } finally {
       for (Connection connection : all) {
