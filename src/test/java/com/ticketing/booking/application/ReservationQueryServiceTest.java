@@ -31,7 +31,7 @@ class ReservationQueryServiceTest {
   @Test
   void 선점만_한_예약은_결제와_티켓_없이_조회된다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
 
     ReservationDetail detail = reservationQueryService.find(held.getId());
 
@@ -45,7 +45,7 @@ class ReservationQueryServiceTest {
   @Test
   void 결제한_예약은_결제와_티켓과_함께_조회된다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
     PaymentResult paid = paymentService.pay(held.getId(), USER_ID);
 
     ReservationDetail detail = reservationQueryService.find(held.getId());
@@ -69,8 +69,8 @@ class ReservationQueryServiceTest {
   void 내_예매_목록은_최근에_만든_예약부터_나온다() {
     Long userId = BookingFixture.newUserId();
     Stage stage = fixture.createStage(2);
-    Reservation first = reservationService.hold(stage.scheduleId(), stage.seatId(0), userId);
-    Reservation second = reservationService.hold(stage.scheduleId(), stage.seatId(1), userId);
+    Reservation first = reservationService.hold(stage.seatId(0), userId);
+    Reservation second = reservationService.hold(stage.seatId(1), userId);
 
     assertThat(reservationQueryService.findAllByUser(userId))
         .extracting(Reservation::getId)
@@ -82,8 +82,8 @@ class ReservationQueryServiceTest {
     Long userId = BookingFixture.newUserId();
     Long otherUserId = BookingFixture.newUserId();
     Stage stage = fixture.createStage(2);
-    Reservation mine = reservationService.hold(stage.scheduleId(), stage.seatId(0), userId);
-    reservationService.hold(stage.scheduleId(), stage.seatId(1), otherUserId);
+    Reservation mine = reservationService.hold(stage.seatId(0), userId);
+    reservationService.hold(stage.seatId(1), otherUserId);
 
     assertThat(reservationQueryService.findAllByUser(userId))
         .extracting(Reservation::getId)

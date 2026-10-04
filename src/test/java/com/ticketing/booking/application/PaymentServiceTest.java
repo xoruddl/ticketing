@@ -34,7 +34,7 @@ class PaymentServiceTest {
   @Test
   void 결제하면_예약이_확정되고_티켓이_발급된다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
 
     PaymentResult result = paymentService.pay(held.getId(), USER_ID);
 
@@ -50,7 +50,7 @@ class PaymentServiceTest {
   @Test
   void 확정된_상태가_저장된다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
 
     paymentService.pay(held.getId(), USER_ID);
 
@@ -70,7 +70,7 @@ class PaymentServiceTest {
   @Test
   void 다른_사용자의_선점은_결제할_수_없다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
 
     assertThatThrownBy(() -> paymentService.pay(held.getId(), OTHER_USER_ID))
         .isInstanceOf(ReservationNotOwnedException.class);
@@ -94,7 +94,7 @@ class PaymentServiceTest {
   @Test
   void 이미_결제한_예약은_다시_결제할_수_없다() {
     Stage stage = fixture.createStage(1);
-    Reservation held = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation held = reservationService.hold(stage.seatId(0), USER_ID);
     paymentService.pay(held.getId(), USER_ID);
 
     assertThatThrownBy(() -> paymentService.pay(held.getId(), USER_ID))

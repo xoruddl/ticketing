@@ -135,7 +135,7 @@ class ReservationPaymentTest {
   /** 새 공연의 좌석 하나를 이 사용자로 선점한다. 테스트마다 새 공연이라 서로 좌석이 겹치지 않는다. */
   private Reservation hold(long userId) {
     Stage stage = fixture.createStage(1);
-    return reservationService.hold(stage.scheduleId(), stage.seatId(0), userId);
+    return reservationService.hold(stage.seatId(0), userId);
   }
 
   /**
