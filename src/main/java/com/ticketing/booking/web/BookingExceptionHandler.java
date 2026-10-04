@@ -1,10 +1,10 @@
 package com.ticketing.booking.web;
 
+import com.ticketing.booking.domain.PerformanceNotFoundException;
 import com.ticketing.booking.domain.ReservationExpiredException;
 import com.ticketing.booking.domain.ReservationNotFoundException;
 import com.ticketing.booking.domain.ReservationNotHeldException;
 import com.ticketing.booking.domain.ReservationNotOwnedException;
-import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
 import java.util.List;
@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * booking 도메인 예외를 HTTP 응답으로 바꾼다. 도메인 예외는 HTTP를 모르므로, 예외 → BookingErrorCode 매핑을 여기서 한다.
  *
- * 응답은 RFC 9457 ProblemDetail 형식이다. 예: GET /schedules/999/seats
+ * 응답은 RFC 9457 ProblemDetail 형식이다. 예: GET /performances/999/seats
  *
  * 404 application/problem+json
- * {"detail":"회차를 찾을 수 없다: 999","instance":"/schedules/999/seats","status":404,"title":"Not Found","code":"SCHEDULE_NOT_FOUND"}
+ * {"detail":"공연을 찾을 수 없다: 999","instance":"/performances/999/seats","status":404,"title":"Not Found","code":"PERFORMANCE_NOT_FOUND"}
  *
  * 핸들러가 채우는 것은 status·detail·code뿐이다. title은 상태 코드의 기본 문구로, instance는 Spring이 요청 경로로
  * 채운다. type은 설정하지 않아 응답에서 빠진다.
@@ -57,9 +57,9 @@ public class BookingExceptionHandler {
     return problem(BookingErrorCode.INVALID_REQUEST, List.of(e.getParameterName()));
   }
 
-  @ExceptionHandler(ScheduleNotFoundException.class)
-  public ProblemDetail handle(ScheduleNotFoundException e) {
-    return problem(BookingErrorCode.SCHEDULE_NOT_FOUND, e.getScheduleId());
+  @ExceptionHandler(PerformanceNotFoundException.class)
+  public ProblemDetail handle(PerformanceNotFoundException e) {
+    return problem(BookingErrorCode.PERFORMANCE_NOT_FOUND, e.getPerformanceId());
   }
 
   @ExceptionHandler(SeatNotFoundException.class)
@@ -67,13 +67,9 @@ public class BookingExceptionHandler {
     return problem(BookingErrorCode.SEAT_NOT_FOUND, e.getSeatId());
   }
 
-  /**
-   * 회차는 요청 본문에 있어 보낸 쪽이 알고 있으므로, 응답에는 좌석 ID만 담는다. 회차까지 함께 남기는 것은 예외
-   * 메시지(로그)의 몫이다.
-   */
   @ExceptionHandler(SeatAlreadyTakenException.class)
   public ProblemDetail handle(SeatAlreadyTakenException e) {
-    return problem(BookingErrorCode.SEAT_ALREADY_TAKEN, e.getSeat().seatId());
+    return problem(BookingErrorCode.SEAT_ALREADY_TAKEN, e.getSeatId());
   }
 
   @ExceptionHandler(ReservationNotFoundException.class)

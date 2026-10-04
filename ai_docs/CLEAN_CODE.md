@@ -17,7 +17,7 @@
 | 2 | `else`를 쓰지 않는다 | 이른 반환(early return)으로 대신한다 |
 | 3 | 원시값과 문자열을 포장한다 | `Long seatId` 대신 `SeatId`, `int amount` 대신 `Money`. 검증과 연산이 그 타입에 모인다 |
 | 4 | 컬렉션은 일급 컬렉션으로 감싼다 | 컬렉션에 걸린 규칙(중복 금지, 개수 제한)이 그 클래스 안에 들어간다 |
-| 5 | 한 줄에 점(`.`)은 하나 | 디미터의 법칙. `reservation.getSeat().getSchedule().getStartAt()`은 리팩터링할 자리다 |
+| 5 | 한 줄에 점(`.`)은 하나 | 디미터의 법칙. `payment.getReservation().getSeat().getPrice()`는 리팩터링할 자리다 |
 | 6 | 인스턴스 변수는 3개 이하 | 넘으면 줄이려는 시도를 한다 |
 | 7 | 도메인 객체에 getter/setter를 두지 않는다 | 값을 꺼내 밖에서 판단하지 말고 객체에게 시킨다 |
 | 8 | 메서드 인자는 3개 이하 | 4개 이상은 허용하지 않는다. 3개도 가능하면 줄인다 |
@@ -27,7 +27,7 @@
 ### 이름
 
 - 축약하지 않는다. `rsv`, `pmt` 대신 `reservation`, `payment`
-- 도메인 용어는 `ai_docs/FEATURES.md`의 영문 이름을 그대로 쓴다 (Performance, Schedule, Seat, Reservation, Payment, Ticket)
+- 도메인 용어는 `ai_docs/FEATURES.md`의 영문 이름을 그대로 쓴다 (Performance, Seat, Reservation, Payment, Ticket)
 - 불리언은 질문형으로: `isExpired()`, `canCancel()`
 - 테스트 메서드명은 한글로 행동을 적는다: `이미_선점된_좌석은_선점할_수_없다()`
 
@@ -40,8 +40,8 @@
 **어떤 예외를 쓰는가**
 
 - 엔티티·값 객체의 불변식 위반(null, 음수 가격 등)은 `IllegalArgumentException`으로 던지고, 메시지는 검증 코드 옆에 둔다. 따로 모으지 않는다
-- 사용자 요청 때문에 생기는 실패(없는 회차, 이미 선점된 좌석 등)는 **전용 도메인 예외**로 던진다. `IllegalArgumentException`으로 던지면 불변식 위반과 구분할 수 없다
-- 도메인 예외는 응답에 필요한 값(예: `scheduleId`)을 필드로 든다. 메시지를 파싱하지 않기 위해서다
+- 사용자 요청 때문에 생기는 실패(없는 공연, 이미 선점된 좌석 등)는 **전용 도메인 예외**로 던진다. `IllegalArgumentException`으로 던지면 불변식 위반과 구분할 수 없다
+- 도메인 예외는 응답에 필요한 값(예: `seatId`)을 필드로 든다. 메시지를 파싱하지 않기 위해서다
 
 **예외를 HTTP 응답으로 바꾸는 곳**
 

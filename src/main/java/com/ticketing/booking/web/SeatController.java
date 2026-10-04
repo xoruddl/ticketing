@@ -7,17 +7,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 좌석 조회 API. 사용자는 회차를 고른 뒤 이 목록을 보고 선점할 좌석을 고른다. */
+/** 좌석 조회 API. 사용자는 공연을 고른 뒤 이 목록을 보고 선점할 좌석을 고른다. */
 @RestController
 @RequiredArgsConstructor
 public class SeatController {
 
   private final SeatQueryService seatQueryService;
 
-  /** 회차의 좌석 목록과 좌석마다 예매 가능 여부. 예: GET /schedules/10/seats */
-  @GetMapping("/schedules/{scheduleId}/seats")
-  public List<SeatResponse> findSeats(@PathVariable Long scheduleId) {
-    return seatQueryService.findSeatAvailabilities(scheduleId).stream()
+  /** 공연의 좌석 목록과 좌석마다 예매 가능 여부. 예: GET /performances/1/seats */
+  @GetMapping("/performances/{performanceId}/seats")
+  public List<SeatResponse> findSeats(@PathVariable Long performanceId) {
+    return seatQueryService.findSeatAvailabilitiesByPerformance(performanceId).stream()
         .map(SeatResponse::from)
         .toList();
   }

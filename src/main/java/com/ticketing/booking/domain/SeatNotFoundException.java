@@ -3,12 +3,11 @@ package com.ticketing.booking.domain;
 import lombok.Getter;
 
 /**
- * 요청한 회차에 그 좌석이 없다. 예: POST /reservations 에 다른 공연의 좌석 ID를 보냈을 때
+ * 요청한 좌석이 없다. 예: POST /reservations 에 없는 좌석 ID를 보냈을 때
  *
- * 두 경우를 하나로 묶는다 - 좌석 자체가 없는 경우와, 좌석은 있지만 그 회차의 공연 좌석이 아닌 경우다. 요청한
- * 사람에게는 "그 회차에서 고를 수 없는 좌석"으로 같고, 남의 공연에 몇 번 좌석이 있는지 알려줄 이유도 없다.
+ * 좌석이 공연에 속하므로 "이 공연의 좌석인가"는 따로 따지지 않는다. 좌석 ID 하나가 공연 하나를 가리킨다.
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class SeatNotFoundException extends RuntimeException {

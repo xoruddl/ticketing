@@ -9,7 +9,7 @@ import lombok.Getter;
  * 붙은 뒤에도 "이 예약이 이 사용자의 것인가"라는 질문 자체는 그대로 남기 때문이다. 바뀌는 것은 userId를 어디서
  * 받느냐뿐이다.
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class ReservationNotOwnedException extends RuntimeException {

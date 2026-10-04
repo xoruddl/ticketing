@@ -34,22 +34,20 @@ class SeatHoldTest {
     // 201 application/json, Location: /reservations/1
     // {
     //   "reservationId":1,
-    //   "scheduleId":10,
     //   "seatId":100,
     //   "status":"HELD",
     //   "expiresAt":"2026-10-01T19:05:00"
     // }
-    assertThat(post(stage.scheduleId(), stage.seatId(0), USER_ID))
+    assertThat(post(stage.seatId(0), USER_ID))
         .hasStatus(HttpStatus.CREATED)
         .bodyJson()
         .satisfies(
             json -> {
               // ID는 DB가 매기므로 값이 아니라 채워졌는지만 본다.
               assertThat(json).extractingPath("$.reservationId").isNotNull();
-              assertThat(json)
-                  .extractingPath("$.scheduleId")
-                  .isEqualTo(stage.scheduleId().intValue());
               assertThat(json).extractingPath("$.seatId").isEqualTo(stage.seatId(0).intValue());
+              // 회차가 없는 모델이라 응답에도 회차 필드가 없다. null로 남겨두지 않는다.
+              assertThat(json).doesNotHavePath("$.scheduleId");
               // 선점 직후라 항상 HELD다.
               assertThat(json).extractingPath("$.status").isEqualTo("HELD");
               // 만료 시각이 없으면 클라이언트가 남은 시간을 보여줄 수 없다.
@@ -62,7 +60,7 @@ class SeatHoldTest {
   void 선점_응답은_예약_위치를_알려준다() {
     Stage stage = fixture.createStage(1);
 
-    assertThat(post(stage.scheduleId(), stage.seatId(0), USER_ID))
+    assertThat(post(stage.seatId(0), USER_ID))
         .hasStatus(HttpStatus.CREATED)
         .headers()
         .satisfies(
@@ -72,12 +70,12 @@ class SeatHoldTest {
   @Test
   void 이미_선점된_좌석은_409를_응답한다() {
     Stage stage = fixture.createStage(1);
-    post(stage.scheduleId(), stage.seatId(0), USER_ID);
+    post(stage.seatId(0), USER_ID);
 
     // 409 application/problem+json
     // {"detail":"이미 팔린 좌석이다:
     // 100","instance":"/reservations","status":409,"title":"Conflict","code":"SEAT_ALREADY_TAKEN"}
-    assertThat(post(stage.scheduleId(), stage.seatId(0), OTHER_USER_ID))
+    assertThat(post(stage.seatId(0), OTHER_USER_ID))
         .hasStatus(HttpStatus.CONFLICT)
         .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
         .bodyJson()
@@ -91,23 +89,10 @@ class SeatHoldTest {
   }
 
   @Test
-  void 없는_회차를_선점하면_404를_응답한다() {
-    Stage stage = fixture.createStage(1);
-    long missingScheduleId = 0L;
-
-    assertThat(post(missingScheduleId, stage.seatId(0), USER_ID))
-        .hasStatus(HttpStatus.NOT_FOUND)
-        .bodyJson()
-        .satisfies(
-            json -> assertThat(json).extractingPath("$.code").isEqualTo("SCHEDULE_NOT_FOUND"));
-  }
-
-  @Test
   void 없는_좌석을_선점하면_404를_응답한다() {
-    Stage stage = fixture.createStage(1);
     long missingSeatId = 0L;
 
-    assertThat(post(stage.scheduleId(), missingSeatId, USER_ID))
+    assertThat(post(missingSeatId, USER_ID))
         .hasStatus(HttpStatus.NOT_FOUND)
         .bodyJson()
         .satisfies(json -> assertThat(json).extractingPath("$.code").isEqualTo("SEAT_NOT_FOUND"));
@@ -121,12 +106,11 @@ class SeatHoldTest {
    */
   @Test
   void 좌석_없이_선점하면_400과_에러_코드를_응답한다() {
-    Stage stage = fixture.createStage(1);
     String body =
         """
-        {"scheduleId":%d,"userId":%d}
+        {"userId":%d}
         """
-            .formatted(stage.scheduleId(), USER_ID);
+            .formatted(USER_ID);
 
     assertThat(
             mvc.post().uri("/reservations").contentType(MediaType.APPLICATION_JSON).content(body))
@@ -145,12 +129,12 @@ class SeatHoldTest {
    * exchange()로 요청을 바로 실행한다. 빌더만 돌려주면, 결과를 검증하지 않고 버리는 호출(예: 409를 보기 전에
    * 좌석을 미리 선점해두는 요청)이 실제로 전송되지 않는다.
    */
-  private MvcTestResult post(long scheduleId, long seatId, long userId) {
+  private MvcTestResult post(long seatId, long userId) {
     String body =
         """
-        {"scheduleId":%d,"seatId":%d,"userId":%d}
+        {"seatId":%d,"userId":%d}
         """
-            .formatted(scheduleId, seatId, userId);
+            .formatted(seatId, userId);
     return mvc.post()
         .uri("/reservations")
         .contentType(MediaType.APPLICATION_JSON)

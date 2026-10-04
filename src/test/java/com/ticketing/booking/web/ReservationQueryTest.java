@@ -39,7 +39,7 @@ class ReservationQueryTest {
     Reservation held = hold(USER_ID);
 
     // 200 application/json
-    // {"reservationId":1,"scheduleId":10,"seatId":100,"status":"HELD",
+    // {"reservationId":1,"seatId":100,"status":"HELD",
     //  "expiresAt":"2026-10-01T19:05:00","payment":null,"ticket":null}
     assertThat(mvc.get().uri("/reservations/{reservationId}", held.getId()))
         .hasStatusOk()
@@ -47,9 +47,9 @@ class ReservationQueryTest {
         .satisfies(
             json -> {
               assertThat(json).extractingPath("$.reservationId").isEqualTo(held.getId().intValue());
-              assertThat(json)
-                  .extractingPath("$.seatId")
-                  .isEqualTo(held.getSeat().seatId().intValue());
+              assertThat(json).extractingPath("$.seatId").isEqualTo(held.getSeatId().intValue());
+              // 회차가 없는 모델이라 응답에도 회차 필드가 없다.
+              assertThat(json).doesNotHavePath("$.scheduleId");
               assertThat(json).extractingPath("$.status").isEqualTo("HELD");
               assertThat(json).extractingPath("$.expiresAt").isNotNull();
               // 필드가 빠진 것이 아니라 null로 나온다.
@@ -109,8 +109,8 @@ class ReservationQueryTest {
     paymentService.pay(first.getId(), userId);
 
     // 200 application/json
-    // [{"reservationId":2,"scheduleId":11,"seatId":101,"status":"HELD","expiresAt":"..."},
-    //  {"reservationId":1,"scheduleId":10,"seatId":100,"status":"CONFIRMED","expiresAt":"..."}]
+    // [{"reservationId":2,"seatId":101,"status":"HELD","expiresAt":"..."},
+    //  {"reservationId":1,"seatId":100,"status":"CONFIRMED","expiresAt":"..."}]
     assertThat(mvc.get().uri("/reservations").param("userId", userId.toString()))
         .hasStatusOk()
         .bodyJson()
@@ -158,6 +158,6 @@ class ReservationQueryTest {
   /** 새 공연의 좌석 하나를 이 사용자로 선점한다. 테스트마다 새 공연이라 서로 좌석이 겹치지 않는다. */
   private Reservation hold(long userId) {
     Stage stage = fixture.createStage(1);
-    return reservationService.hold(stage.scheduleId(), stage.seatId(0), userId);
+    return reservationService.hold(stage.seatId(0), userId);
   }
 }

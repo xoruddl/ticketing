@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
-/** 회차 좌석 조회 API. 요청부터 DB 조회까지 실제로 거쳐 응답 JSON을 확인한다. */
+/** 공연 좌석 조회 API. 요청부터 DB 조회까지 실제로 거쳐 응답 JSON을 확인한다. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, BookingFixture.class})
@@ -24,7 +24,7 @@ class SeatQueryTest {
   @Autowired BookingFixture fixture;
 
   @Test
-  void 회차의_좌석_목록을_조회한다() {
+  void 공연의_좌석_목록을_조회한다() {
     Stage stage = fixture.createStage(3);
 
     // 응답은 좌석 객체의 배열이다. 루트가 배열이라 경로가 $[0].seatId 모양이 된다.
@@ -38,7 +38,7 @@ class SeatQueryTest {
     //
     // {"seatId":103,"section":"A","rowName":"1","seatNumber":3,"grade":"VIP","price":150000,"available":true}
     // ]
-    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", stage.performanceId()))
         .hasStatusOk()
         .bodyJson()
         .satisfies(
@@ -68,7 +68,7 @@ class SeatQueryTest {
   void 선점된_좌석은_예매_불가로_응답한다() {
     Stage stage = fixture.createStage(2);
     // 저장소로 예약을 직접 넣지 않고 선점 API를 거친다. 사용자가 실제로 겪는 순서(선점 → 목록 새로고침) 그대로 본다.
-    holdSeat(stage.scheduleId(), stage.seatId(0));
+    holdSeat(stage.seatId(0));
 
     // 200 application/json
     // [
@@ -77,7 +77,7 @@ class SeatQueryTest {
     //
     // {"seatId":102,"section":"A","rowName":"1","seatNumber":2,"grade":"VIP","price":150000,"available":true}
     // ]
-    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", stage.performanceId()))
         .hasStatusOk()
         .bodyJson()
         .satisfies(
@@ -91,32 +91,32 @@ class SeatQueryTest {
   }
 
   @Test
-  void 없는_회차의_좌석을_조회하면_404를_응답한다() {
-    // id는 IDENTITY로 1부터 매겨지므로 0번 회차는 항상 없다.
-    long missingScheduleId = 0L;
+  void 없는_공연의_좌석을_조회하면_404를_응답한다() {
+    // id는 IDENTITY로 1부터 매겨지므로 0번 공연은 항상 없다.
+    long missingPerformanceId = 0L;
 
     // 응답은 ProblemDetail 객체 하나다. 루트가 객체라 경로가 $.code 모양이 된다.
     // code는 ProblemDetail의 properties 맵에 들어 있지만, 직렬화할 때 최상위 필드로 풀려 나온다.
     // 필드 순서는 의미가 없다. JSON 객체는 이름으로 값을 찾는다.
     // 404 application/problem+json
     // {
-    //   "detail":"회차를 찾을 수 없다: 0",
-    //   "instance":"/schedules/0/seats",
+    //   "detail":"공연을 찾을 수 없다: 0",
+    //   "instance":"/performances/0/seats",
     //   "status":404,
     //   "title":"Not Found",
-    //   "code":"SCHEDULE_NOT_FOUND"
+    //   "code":"PERFORMANCE_NOT_FOUND"
     // }
-    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", missingScheduleId))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", missingPerformanceId))
         .hasStatus(HttpStatus.NOT_FOUND)
         .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
         .bodyJson()
         .satisfies(
             json -> {
               // 클라이언트는 문구가 아니라 code로 에러 종류를 구분한다.
-              assertThat(json).extractingPath("$.code").isEqualTo("SCHEDULE_NOT_FOUND");
-              assertThat(json).extractingPath("$.detail").isEqualTo("회차를 찾을 수 없다: 0");
+              assertThat(json).extractingPath("$.code").isEqualTo("PERFORMANCE_NOT_FOUND");
+              assertThat(json).extractingPath("$.detail").isEqualTo("공연을 찾을 수 없다: 0");
               // instance는 핸들러가 채우지 않아도 Spring이 요청 경로로 채운다.
-              assertThat(json).extractingPath("$.instance").isEqualTo("/schedules/0/seats");
+              assertThat(json).extractingPath("$.instance").isEqualTo("/performances/0/seats");
             });
   }
 
@@ -125,12 +125,12 @@ class SeatQueryTest {
    *
    * exchange()로 바로 실행하고, 201인지 확인해 둔다. 선점이 조용히 실패하면 아래 단언이 엉뚱한 이유로 깨지기 때문이다.
    */
-  private void holdSeat(long scheduleId, long seatId) {
+  private void holdSeat(long seatId) {
     String body =
         """
-        {"scheduleId":%d,"seatId":%d,"userId":7}
+        {"seatId":%d,"userId":7}
         """
-            .formatted(scheduleId, seatId);
+            .formatted(seatId);
     assertThat(
             mvc.post()
                 .uri("/reservations")

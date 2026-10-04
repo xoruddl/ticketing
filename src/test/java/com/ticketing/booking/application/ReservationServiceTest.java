@@ -8,7 +8,6 @@ import com.ticketing.booking.BookingFixture;
 import com.ticketing.booking.BookingFixture.Stage;
 import com.ticketing.booking.domain.Reservation;
 import com.ticketing.booking.domain.ReservationStatus;
-import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
 import java.time.Clock;
@@ -44,13 +43,12 @@ class ReservationServiceTest {
   void 좌석을_선점하면_선점_상태로_저장된다() {
     Stage stage = fixture.createStage(1);
 
-    Reservation reservation = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation reservation = reservationService.hold(stage.seatId(0), USER_ID);
 
     assertThat(reservation.getId()).isNotNull();
     assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
     assertThat(reservation.getUserId()).isEqualTo(USER_ID);
-    assertThat(reservation.getSeat().scheduleId()).isEqualTo(stage.scheduleId());
-    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(0));
+    assertThat(reservation.getSeatId()).isEqualTo(stage.seatId(0));
   }
 
   /** 만료 시각이 몇 분 뒤인지는 HoldPolicyTest가 본다. 여기서는 선점에 기한이 붙는지만 확인한다. */
@@ -58,7 +56,7 @@ class ReservationServiceTest {
   void 선점에는_만료_시각이_붙는다() {
     Stage stage = fixture.createStage(1);
 
-    Reservation reservation = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation reservation = reservationService.hold(stage.seatId(0), USER_ID);
 
     assertThat(reservation.getExpiresAt()).isAfter(LocalDateTime.now(clock));
     assertThat(reservation.isExpired(LocalDateTime.now(clock))).isFalse();
@@ -73,7 +71,7 @@ class ReservationServiceTest {
   void 선점하면_DB가_행의_생성_시각을_남긴다() {
     Stage stage = fixture.createStage(1);
 
-    Reservation reservation = reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    Reservation reservation = reservationService.hold(stage.seatId(0), USER_ID);
 
     LocalDateTime createdAt =
         jdbc.queryForObject(
@@ -86,10 +84,9 @@ class ReservationServiceTest {
   @Test
   void 이미_선점된_좌석은_다른_사용자가_선점할_수_없다() {
     Stage stage = fixture.createStage(1);
-    reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    reservationService.hold(stage.seatId(0), USER_ID);
 
-    assertThatThrownBy(
-            () -> reservationService.hold(stage.scheduleId(), stage.seatId(0), OTHER_USER_ID))
+    assertThatThrownBy(() -> reservationService.hold(stage.seatId(0), OTHER_USER_ID))
         .isInstanceOf(SeatAlreadyTakenException.class);
   }
 
@@ -97,49 +94,27 @@ class ReservationServiceTest {
   @Test
   void 이미_선점한_좌석은_같은_사용자도_다시_선점할_수_없다() {
     Stage stage = fixture.createStage(1);
-    reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    reservationService.hold(stage.seatId(0), USER_ID);
 
-    assertThatThrownBy(() -> reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID))
+    assertThatThrownBy(() -> reservationService.hold(stage.seatId(0), USER_ID))
         .isInstanceOf(SeatAlreadyTakenException.class);
   }
 
   @Test
   void 옆_좌석은_따로_선점된다() {
     Stage stage = fixture.createStage(2);
-    reservationService.hold(stage.scheduleId(), stage.seatId(0), USER_ID);
+    reservationService.hold(stage.seatId(0), USER_ID);
 
-    Reservation reservation =
-        reservationService.hold(stage.scheduleId(), stage.seatId(1), OTHER_USER_ID);
+    Reservation reservation = reservationService.hold(stage.seatId(1), OTHER_USER_ID);
 
-    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(1));
-  }
-
-  @Test
-  void 없는_회차는_선점할_수_없다() {
-    Stage stage = fixture.createStage(1);
-    long missingScheduleId = 0L;
-
-    assertThatThrownBy(() -> reservationService.hold(missingScheduleId, stage.seatId(0), USER_ID))
-        .isInstanceOf(ScheduleNotFoundException.class);
+    assertThat(reservation.getSeatId()).isEqualTo(stage.seatId(1));
   }
 
   @Test
   void 없는_좌석은_선점할_수_없다() {
-    Stage stage = fixture.createStage(1);
     long missingSeatId = 0L;
 
-    assertThatThrownBy(() -> reservationService.hold(stage.scheduleId(), missingSeatId, USER_ID))
-        .isInstanceOf(SeatNotFoundException.class);
-  }
-
-  /** 좌석은 공연에 붙어 있다. 다른 공연의 좌석 ID로는 이 회차를 예매할 수 없다. */
-  @Test
-  void 다른_공연의_좌석은_선점할_수_없다() {
-    Stage stage = fixture.createStage(1);
-    Stage otherStage = fixture.createStage(1);
-
-    assertThatThrownBy(
-            () -> reservationService.hold(stage.scheduleId(), otherStage.seatId(0), USER_ID))
+    assertThatThrownBy(() -> reservationService.hold(missingSeatId, USER_ID))
         .isInstanceOf(SeatNotFoundException.class);
   }
 }

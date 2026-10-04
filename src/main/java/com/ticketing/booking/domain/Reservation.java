@@ -1,6 +1,5 @@
 package com.ticketing.booking.domain;
 
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,9 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 사용자가 회차의 좌석 하나를 잡은 것. 예: 7번 사용자가 10월 1일 회차의 A구역 3열 12번을 19시 5분까지 선점
+ * 사용자가 좌석 하나를 잡은 것. 예: 7번 사용자가 레미제라블 A구역 3열 12번을 19시 5분까지 선점
  *
- * 이 회차의 이 좌석이 팔렸는지는 좌석이 아니라 이 예약이 있는지로 판단한다({@link Seat} 주석 참고).
+ * 이 좌석이 팔렸는지는 좌석이 아니라 이 예약이 있는지로 판단한다({@link Seat} 주석 참고).
  * 예약은 언제나 선점(HELD)으로 태어나고, 결제가 끝나면 확정된다.
  */
 @Entity
@@ -27,8 +26,11 @@ public class Reservation {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** 어느 회차의 어느 좌석인지. 테이블에는 schedule_id, seat_id 컬럼으로 풀려 저장된다. */
-  @Embedded private ScheduledSeat seat;
+  /**
+   * 이 예약이 잡은 좌석. 연관관계 대신 ID로 참조한다. 좌석이 공연에 속하므로 이 값 하나로 어느 공연의 어느 좌석인지
+   * 정해진다.
+   */
+  private Long seatId;
 
   /** 이 좌석을 잡은 사용자. 인증은 아직 없어 요청이 주는 값을 그대로 믿는다. */
   private Long userId;
@@ -40,8 +42,8 @@ public class Reservation {
   /** 선점 유효 시간이 끝나는 시각. 선점할 때 박아두고 이후 바꾸지 않는다. */
   private LocalDateTime expiresAt;
 
-  private Reservation(ScheduledSeat seat, Long userId, LocalDateTime expiresAt) {
-    this.seat = seat;
+  private Reservation(Long seatId, Long userId, LocalDateTime expiresAt) {
+    this.seatId = seatId;
     this.userId = userId;
     this.status = ReservationStatus.HELD;
     this.expiresAt = expiresAt;
@@ -53,12 +55,12 @@ public class Reservation {
    * 만료 시각을 직접 받는다. 유효 시간이 몇 분인지, 지금이 몇 시인지는 도메인이 알 일이 아니라 부르는 쪽(서비스)의
    * 설정과 시계가 정한다.
    *
-   * 다른 사람이 이미 잡은 좌석인지는 여기서 보지 않는다. 예약 하나만으로는 알 수 없고 그 회차·좌석의 다른 예약을
-   * 봐야 하므로, 그 판단은 저장소를 가진 서비스가 한다.
+   * 다른 사람이 이미 잡은 좌석인지는 여기서 보지 않는다. 예약 하나만으로는 알 수 없고 그 좌석의 다른 예약을 봐야
+   * 하므로, 그 판단은 저장소를 가진 서비스가 한다.
    */
-  public static Reservation hold(ScheduledSeat seat, Long userId, LocalDateTime expiresAt) {
-    if (seat == null) {
-      throw new IllegalArgumentException("예약의 회차·좌석은 비어 있을 수 없다");
+  public static Reservation hold(Long seatId, Long userId, LocalDateTime expiresAt) {
+    if (seatId == null) {
+      throw new IllegalArgumentException("예약의 좌석 ID는 비어 있을 수 없다");
     }
     if (userId == null) {
       throw new IllegalArgumentException("예약의 사용자 ID는 비어 있을 수 없다");
@@ -66,7 +68,7 @@ public class Reservation {
     if (expiresAt == null) {
       throw new IllegalArgumentException("선점 만료 시각은 비어 있을 수 없다");
     }
-    return new Reservation(seat, userId, expiresAt);
+    return new Reservation(seatId, userId, expiresAt);
   }
 
   /**

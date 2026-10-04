@@ -65,7 +65,7 @@ public class PaymentService {
     reservation.confirm(now);
 
     // 금액은 요청으로 받지 않고 좌석 가격에서 가져온다. 사용자가 금액을 정하게 두면 안 된다.
-    Long seatId = reservation.getSeat().seatId();
+    Long seatId = reservation.getSeatId();
     Seat seat =
         seatRepository.findById(seatId).orElseThrow(() -> new SeatNotFoundException(seatId));
     Payment payment =

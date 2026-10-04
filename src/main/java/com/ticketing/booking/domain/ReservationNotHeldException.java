@@ -10,7 +10,7 @@ import lombok.Getter;
  * 같은 결제 요청이 다시 온 경우(재시도)도 지금은 이 예외로 거절한다. 두 번째 요청에 첫 결제 결과를 돌려주는
  * 멱등 처리는 Step 7–8에서 다룬다.
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class ReservationNotHeldException extends RuntimeException {

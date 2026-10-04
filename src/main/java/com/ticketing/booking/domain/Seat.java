@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 /**
  * 공연의 좌석 하나. 예: 레미제라블 A구역 3열 12번, VIP, 150,000원
  *
- * 회차마다 따로 만들지 않고 모든 회차가 이 행을 함께 쓴다. 그래서 "예매 가능 여부"는 이 엔티티가 아니라 회차별 예약이 있는지로 판단한다.
+ * 좌석 하나가 한 번 팔린다. "예매 가능 여부"는 이 엔티티에 두지 않고, 이 좌석에 좌석을 차지한 예약이 있는지로 판단한다.
  */
 @Entity
 @Getter
@@ -57,10 +57,5 @@ public class Seat {
     this.position = position;
     this.grade = grade;
     this.price = price;
-  }
-
-  /** 이 좌석이 주어진 회차의 공연 좌석인지. 다른 공연의 좌석으로 선점하는 것을 막을 때 쓴다. */
-  public boolean isIn(Schedule schedule) {
-    return performanceId.equals(schedule.getPerformanceId());
   }
 }

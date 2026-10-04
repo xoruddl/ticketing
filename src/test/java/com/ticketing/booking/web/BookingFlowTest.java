@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
  * 서비스로 미리 만든다. 이 테스트는 그러지 않고, 클라이언트처럼 앞 응답에서 받은 ID만으로 다음 요청을 만든다. 각 API의
  * 응답이 다음 단계에 필요한 것을 실제로 넘겨주는지는 여기서만 보인다.
  *
- * 공연·회차·좌석은 등록 API가 없어(FEATURES.md 범위 밖) 픽스처로 넣는다.
+ * 공연·좌석은 등록 API가 없어(FEATURES.md 범위 밖) 픽스처로 넣는다.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -41,8 +41,9 @@ class BookingFlowTest {
     Long userId = BookingFixture.newUserId();
 
     // 1. 좌석 조회: 예매 가능한 좌석을 고른다.
+    Long performanceId = stage.performanceId();
     MvcTestResult seats =
-        mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()).exchange();
+        mvc.get().uri("/performances/{performanceId}/seats", performanceId).exchange();
     assertThat(seats).hasStatusOk();
     assertThat(read(seats, "$[0].available", Boolean.class)).isTrue();
     long seatId = read(seats, "$[0].seatId", Long.class);
@@ -54,15 +55,15 @@ class BookingFlowTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                {"scheduleId":%d,"seatId":%d,"userId":%d}
+                {"seatId":%d,"userId":%d}
                 """
-                    .formatted(stage.scheduleId(), seatId, userId))
+                    .formatted(seatId, userId))
             .exchange();
     assertThat(held).hasStatus(HttpStatus.CREATED);
     long reservationId = read(held, "$.reservationId", Long.class);
 
     // 선점한 좌석은 다른 사용자에게 예매 불가로 보인다.
-    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", performanceId))
         .bodyJson()
         .extractingPath("$[0].available")
         .isEqualTo(false);

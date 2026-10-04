@@ -4,14 +4,13 @@ import com.ticketing.booking.application.ReservationDetail;
 import com.ticketing.booking.domain.Payment;
 import com.ticketing.booking.domain.Reservation;
 import com.ticketing.booking.domain.ReservationStatus;
-import com.ticketing.booking.domain.ScheduledSeat;
 import com.ticketing.booking.domain.Ticket;
 import java.time.LocalDateTime;
 
 /**
  * 예약 단건 조회 결과. 예:
  *
- * {"reservationId":1,"scheduleId":10,"seatId":100,"status":"CONFIRMED","expiresAt":"2026-10-01T19:05:00",
+ * {"reservationId":1,"seatId":100,"status":"CONFIRMED","expiresAt":"2026-10-01T19:05:00",
  *  "payment":{"paymentId":3,"amount":150000,"paidAt":"2026-10-01T19:03:00"},
  *  "ticket":{"ticketId":5,"code":"3f2a9c1e-...","issuedAt":"2026-10-01T19:03:00"}}
  *
@@ -21,7 +20,6 @@ import java.time.LocalDateTime;
  * 시각은 ReservationResponse와 같이 타임존 없이 나간다(그 주석 참고).
  *
  * @param reservationId 예약 ID
- * @param scheduleId 회차 ID
  * @param seatId 좌석 ID
  * @param status 예약 상태. 만료 시각이 지났어도 아직 HELD로 나올 수 있다(Step 3에서 다룬다)
  * @param expiresAt 선점 유효 시간이 끝나는 시각
@@ -30,7 +28,6 @@ import java.time.LocalDateTime;
  */
 public record ReservationDetailResponse(
     Long reservationId,
-    Long scheduleId,
     Long seatId,
     ReservationStatus status,
     LocalDateTime expiresAt,
@@ -39,11 +36,9 @@ public record ReservationDetailResponse(
 
   public static ReservationDetailResponse from(ReservationDetail detail) {
     Reservation reservation = detail.reservation();
-    ScheduledSeat seat = reservation.getSeat();
     return new ReservationDetailResponse(
         reservation.getId(),
-        seat.scheduleId(),
-        seat.seatId(),
+        reservation.getSeatId(),
         reservation.getStatus(),
         reservation.getExpiresAt(),
         detail.payment().map(PaymentView::from).orElse(null),
