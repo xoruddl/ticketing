@@ -32,7 +32,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestClient;
 
 /**
- * 같은 회차의 같은 좌석에 선점 요청을 동시에 보낸다. 한 건만 성공해야 한다.
+ * 같은 좌석에 선점 요청을 동시에 보낸다. 한 건만 성공해야 한다.
  *
  * MockMvc가 아니라 실제 포트로 띄운 서버에 HTTP로 보낸다. 요청마다 톰캣 스레드가 따로 붙고 RequestIdFilter를
  * 거치므로, 운영에서 요청이 몰릴 때와 같은 경로로 돈다.
@@ -120,7 +120,7 @@ class DoubleHoldReproductionTest {
         .post()
         .uri("/reservations")
         .contentType(MediaType.APPLICATION_JSON)
-        .body(Map.of("scheduleId", stage.scheduleId(), "seatId", stage.seatId(0), "userId", userId))
+        .body(Map.of("seatId", stage.seatId(0), "userId", userId))
         .exchange(
             (request, response) ->
                 new Result(
@@ -133,8 +133,7 @@ class DoubleHoldReproductionTest {
   private List<Map<String, Object>> reservationsOf(Stage stage) {
     return jdbc.queryForList(
         "select id, user_id, status, created_at from reservation"
-            + " where schedule_id = ? and seat_id = ? order by created_at",
-        stage.scheduleId(),
+            + " where seat_id = ? order by created_at",
         stage.seatId(0));
   }
 
