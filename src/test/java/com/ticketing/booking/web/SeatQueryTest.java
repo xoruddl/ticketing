@@ -38,7 +38,7 @@ class SeatQueryTest {
     //
     // {"seatId":103,"section":"A","rowName":"1","seatNumber":3,"grade":"VIP","price":150000,"available":true}
     // ]
-    assertThat(mvc.get().uri("/performances/{performanceId}/seats", performanceId(stage)))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", stage.performanceId()))
         .hasStatusOk()
         .bodyJson()
         .satisfies(
@@ -77,7 +77,7 @@ class SeatQueryTest {
     //
     // {"seatId":102,"section":"A","rowName":"1","seatNumber":2,"grade":"VIP","price":150000,"available":true}
     // ]
-    assertThat(mvc.get().uri("/performances/{performanceId}/seats", performanceId(stage)))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", stage.performanceId()))
         .hasStatusOk()
         .bodyJson()
         .satisfies(
@@ -118,11 +118,6 @@ class SeatQueryTest {
               // instance는 핸들러가 채우지 않아도 Spring이 요청 경로로 채운다.
               assertThat(json).extractingPath("$.instance").isEqualTo("/performances/0/seats");
             });
-  }
-
-  /** 픽스처가 아직 회차를 들고 있어 회차에서 공연 ID를 꺼낸다. 픽스처에서 회차를 빼면 바뀐다. */
-  private Long performanceId(Stage stage) {
-    return stage.schedule().getPerformanceId();
   }
 
   /**

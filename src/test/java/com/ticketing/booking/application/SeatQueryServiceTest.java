@@ -33,7 +33,7 @@ class SeatQueryServiceTest {
     Stage stage = fixture.createStage(3);
 
     List<SeatAvailability> seats =
-        seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage));
+        seatQueryService.findSeatAvailabilitiesByPerformance(stage.performanceId());
 
     assertThat(seats).hasSize(3).allMatch(SeatAvailability::available);
   }
@@ -44,7 +44,7 @@ class SeatQueryServiceTest {
     reservationService.hold(stage.seatId(1), USER_ID);
 
     List<SeatAvailability> seats =
-        seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage));
+        seatQueryService.findSeatAvailabilitiesByPerformance(stage.performanceId());
 
     // 아래 단언이 순서에 기대므로, 좌석이 어떤 순서로 오는지를 먼저 못 박는다.
     // 이게 없으면 정렬이 뒤집혀도 테스트가 통과한다. 셋 중 가운데가 막힌 모양은 뒤집어도 똑같기 때문이다.
@@ -66,11 +66,11 @@ class SeatQueryServiceTest {
     Stage other = fixture.createStage(2);
     reservationService.hold(other.seatId(0), USER_ID);
 
-    assertThat(seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage)))
+    assertThat(seatQueryService.findSeatAvailabilitiesByPerformance(stage.performanceId()))
         .allMatch(SeatAvailability::available);
     // 선점한 공연에서는 실제로 막혀 있어야 한다. 이 단언이 없으면 선점이 아무 일도 하지 않았을 때도
     // 위 단언이 그냥 통과해, 공연끼리 갈라져 있다는 것을 확인하지 못한 채 초록이 된다.
-    assertThat(seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(other)))
+    assertThat(seatQueryService.findSeatAvailabilitiesByPerformance(other.performanceId()))
         .extracting(SeatAvailability::available)
         .containsExactly(false, true);
   }
@@ -90,7 +90,7 @@ class SeatQueryServiceTest {
     reservationRepository.save(Reservation.hold(stage.seatId(0), USER_ID, alreadyPassed));
 
     List<SeatAvailability> seats =
-        seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage));
+        seatQueryService.findSeatAvailabilitiesByPerformance(stage.performanceId());
 
     assertThat(seats).singleElement().extracting(SeatAvailability::available).isEqualTo(false);
   }
@@ -102,10 +102,5 @@ class SeatQueryServiceTest {
     assertThatThrownBy(
             () -> seatQueryService.findSeatAvailabilitiesByPerformance(missingPerformanceId))
         .isInstanceOf(PerformanceNotFoundException.class);
-  }
-
-  /** 픽스처가 아직 회차를 들고 있어 회차에서 공연 ID를 꺼낸다. 픽스처에서 회차를 빼면 바뀐다. */
-  private Long performanceId(Stage stage) {
-    return stage.schedule().getPerformanceId();
   }
 }
