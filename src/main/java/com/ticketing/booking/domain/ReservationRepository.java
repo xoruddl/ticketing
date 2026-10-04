@@ -43,6 +43,42 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
       @Param("statuses") Collection<ReservationStatus> statuses);
 
   /**
+   * 이 좌석을 차지하고 있는 예약이 있는가. 회차 없이 좌석만으로 선점할 때 거절할지 판단한다.
+   *
+   * 회차를 빼는 동안 {@link #existsBySeatAndStatusIn}을 대신할 메서드다 (DECISIONS.md "도메인: 회차(Schedule)를
+   * 뺀다"). 회차를 보지 않으므로, 좌석 하나에 살아 있는 예약은 회차와 관계없이 하나뿐이라는 뜻이 된다.
+   *
+   * seat_id 조건은 V5의 idx_reservation_seat 인덱스를 탄다. 확인과 저장 사이에 다른 요청이 끼어들 수 있는 것은
+   * {@link #existsBySeatAndStatusIn}과 같다.
+   *
+   * 메서드 이름으로 쿼리를 만들게 하면 임베디드 경로(seat.seatId)를 이름에 써야 해 읽기 어려워, 쿼리를 직접 적는다.
+   */
+  @Query(
+      """
+      select count(r) > 0 from Reservation r
+      where r.seat.seatId = :seatId and r.status in :statuses
+      """)
+  boolean existsBySeatIdAndStatusIn(
+      @Param("seatId") Long seatId, @Param("statuses") Collection<ReservationStatus> statuses);
+
+  /**
+   * 주어진 좌석 중 이미 차지된 좌석의 ID. 공연의 좌석 목록에 예매 가능 여부를 채울 때 쓴다.
+   *
+   * 회차를 빼는 동안 {@link #findOccupiedSeatIds}를 대신할 메서드다. 예약에는 공연 ID가 없어서, 부르는 쪽이 공연의
+   * 좌석 ID 목록을 넘긴다. 좌석 표와 JOIN하지 않으므로 이 쿼리는 예약 표만 읽는다.
+   *
+   * 좌석 목록이 비어 있으면 빈 결과를 돌려준다. 돌려주는 것이 Set인 이유는 {@link #findOccupiedSeatIds}와 같다.
+   */
+  @Query(
+      """
+      select r.seat.seatId from Reservation r
+      where r.seat.seatId in :seatIds and r.status in :statuses
+      """)
+  Set<Long> findOccupiedSeatIdsAmong(
+      @Param("seatIds") Collection<Long> seatIds,
+      @Param("statuses") Collection<ReservationStatus> statuses);
+
+  /**
    * 이 사용자의 예약 전부, 최근에 만든 것부터. 내 예매 목록(GET /reservations?userId=)에 쓴다.
    *
    * 상태로 거르지 않는다. 만료·취소된 예약도 사용자에게는 "내가 했던 예매"라 목록에 보인다.
