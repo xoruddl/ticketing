@@ -13,9 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 /**
- * 회차 없이 좌석 ID만으로 예약을 저장하고 찾는다. 실제 MySQL에서 쿼리가 도는지 확인한다.
- *
- * 회차를 빼는 동안의 중간 단계다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+ * 좌석 ID로 예약을 저장하고 찾는다. 실제 MySQL에서 쿼리가 도는지 확인한다.
  */
 @SpringBootTest
 @Import({TestcontainersConfiguration.class, BookingFixture.class})
@@ -29,7 +27,7 @@ class ReservationRepositoryTest {
   @Autowired ReservationRepository reservationRepository;
   @Autowired BookingFixture fixture;
 
-  /** V5에서 schedule_id를 nullable로 바꿨다. 다시 읽을 때 ScheduledSeat 검증도 통과해야 한다. */
+  /** 엔티티는 schedule_id를 매핑하지 않는다. V5에서 nullable로 바꿨기 때문에 그 컬럼을 비운 채 저장된다. */
   @Test
   void 회차_없이_선점한_예약도_저장하고_다시_읽을_수_있다() {
     Stage stage = fixture.createStage(1);
@@ -37,7 +35,6 @@ class ReservationRepositoryTest {
 
     Reservation found = reservationRepository.findById(saved.getId()).orElseThrow();
 
-    assertThat(found.getSeat().scheduleId()).isNull();
     assertThat(found.getSeatId()).isEqualTo(stage.seatId(0));
   }
 

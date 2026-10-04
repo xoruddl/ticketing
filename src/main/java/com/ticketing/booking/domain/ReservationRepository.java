@@ -19,16 +19,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
    * seat_id 조건은 V5의 idx_reservation_seat 인덱스를 탄다.
    *
    * 이 확인과 저장 사이에 다른 요청이 끼어들 수 있다. 아직 막지 않는다 — Step 1에서 재현했고 Step 2에서 막는다.
-   *
-   * 메서드 이름으로 쿼리를 만들게 하면 임베디드 경로(seat.seatId)를 이름에 써야 해 읽기 어려워, 쿼리를 직접 적는다.
    */
-  @Query(
-      """
-      select count(r) > 0 from Reservation r
-      where r.seat.seatId = :seatId and r.status in :statuses
-      """)
-  boolean existsBySeatIdAndStatusIn(
-      @Param("seatId") Long seatId, @Param("statuses") Collection<ReservationStatus> statuses);
+  boolean existsBySeatIdAndStatusIn(Long seatId, Collection<ReservationStatus> statuses);
 
   /**
    * 주어진 좌석 중 이미 차지된 좌석의 ID. 공연의 좌석 목록에 예매 가능 여부를 채울 때 쓴다.
@@ -46,8 +38,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
    */
   @Query(
       """
-      select r.seat.seatId from Reservation r
-      where r.seat.seatId in :seatIds and r.status in :statuses
+      select r.seatId from Reservation r
+      where r.seatId in :seatIds and r.status in :statuses
       """)
   Set<Long> findOccupiedSeatIdsAmong(
       @Param("seatIds") Collection<Long> seatIds,
