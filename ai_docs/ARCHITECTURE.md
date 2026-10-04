@@ -53,7 +53,7 @@ flowchart TB
     subgraph 예매시스템["좌석 예매 시스템"]
         앱["예매 앱<br/><i>Spring Boot 4.1 / Java 21</i><br/>모듈러 모놀리식<br/>배포는 하나다"]
         앱2["예매 앱 (2번째 인스턴스)<br/><i>Step 10</i>"]
-        DB[("MySQL 8.0<br/><i>공연·회차·좌석·예약</i>")]
+        DB[("MySQL 8.0<br/><i>공연·좌석·예약</i>")]
     end
 
     관객 -->|"HTTP"| 앱
@@ -87,7 +87,7 @@ flowchart TB
 ```mermaid
 flowchart TB
     subgraph 앱["예매 앱"]
-        booking["booking<br/><i>지금은 이것 하나뿐이다</i><br/>공연·회차·좌석·예약"]
+        booking["booking<br/><i>지금은 이것 하나뿐이다</i><br/>공연·좌석·예약"]
 
         subgraph 예정["Step 4에서 이렇게 나눈다"]
             reservation["reservation<br/>좌석 선점·예약"]
