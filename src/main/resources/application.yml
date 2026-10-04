@@ -13,6 +13,15 @@ spring:
     # 트랜잭션이 끝난 뒤 컨트롤러·뷰에서 지연 로딩이 일어나지 않게 한다. 켜두면 요청 내내 DB 커넥션을 붙잡는다.
     open-in-view: false
 
+management:
+  endpoints:
+    web:
+      exposure:
+        # HTTP로 여는 Actuator 엔드포인트. 기본값은 health뿐이라 metrics를 더한다.
+        # 커넥션 풀 보기: /actuator/metrics/hikaricp.connections.active (사용 중), .pending (커넥션을 기다리는 스레드)
+        # env·beans처럼 설정·내부 구조를 드러내는 엔드포인트는 열지 않는다.
+        include: health, metrics
+
 logging:
   pattern:
     # 로그 줄마다 요청 ID(RequestIdFilter가 MDC에 넣은 값)를 찍어, 동시 요청의 로그가 뒤섞여도 어느 요청의 것인지 가른다.

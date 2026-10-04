@@ -20,6 +20,9 @@ repositories {
 }
 
 dependencies {
+	// 앱이 도는 중에 상태·지표를 읽는 엔드포인트(/actuator/*). Micrometer가 함께 들어와
+	// 커넥션 풀(HikariCP) 지표(hikaricp.connections.active·pending 등)를 자동으로 등록한다.
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	// 스키마는 엔티티가 아니라 src/main/resources/db/migration 의 SQL로 만든다.
 	implementation 'org.springframework.boot:spring-boot-starter-flyway'
