@@ -13,8 +13,24 @@ class ReservationTest {
 
   @Test
   void 회차_좌석_없이_선점할_수_없다() {
-    assertThatThrownBy(() -> Reservation.hold(null, 7L, EXPIRES_AT))
+    assertThatThrownBy(() -> Reservation.hold((ScheduledSeat) null, 7L, EXPIRES_AT))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void 좌석_없이_선점할_수_없다() {
+    assertThatThrownBy(() -> Reservation.hold((Long) null, 7L, EXPIRES_AT))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  /** 회차를 빼는 동안의 선점. 좌석 ID만 받고 회차는 비워 둔다. */
+  @Test
+  void 좌석만으로_선점하면_회차_없이_좌석을_차지한다() {
+    Reservation reservation = Reservation.hold(100L, 7L, EXPIRES_AT);
+
+    assertThat(reservation.getSeat().seatId()).isEqualTo(100L);
+    assertThat(reservation.getSeat().scheduleId()).isNull();
+    assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
   }
 
   @Test

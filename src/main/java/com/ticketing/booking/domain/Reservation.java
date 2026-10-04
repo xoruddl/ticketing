@@ -48,7 +48,8 @@ public class Reservation {
   }
 
   /**
-   * 좌석을 선점한다. 예약을 만드는 유일한 길이다.
+   * 회차의 좌석을 선점한다. 회차를 빼는 동안에는 좌석만으로 선점하는 {@link #hold(Long, Long, LocalDateTime)}와
+   * 함께 예약을 만드는 길이다. 전환이 끝나면 이 메서드를 없앤다.
    *
    * 만료 시각을 직접 받는다. 유효 시간이 몇 분인지, 지금이 몇 시인지는 도메인이 알 일이 아니라 부르는 쪽(서비스)의
    * 설정과 시계가 정한다.
@@ -67,6 +68,20 @@ public class Reservation {
       throw new IllegalArgumentException("선점 만료 시각은 비어 있을 수 없다");
     }
     return new Reservation(seat, userId, expiresAt);
+  }
+
+  /**
+   * 회차 없이 좌석만으로 선점한다. 좌석 하나가 한 번 팔리는 모델에서의 선점이다
+   * (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+   *
+   * 회차를 빼는 동안에는 회차 칸을 비운 {@link ScheduledSeat}에 담아 저장한다. 테이블에는 schedule_id가 null로 들어간다.
+   * 만료 시각과 이미 잡힌 좌석에 대한 설명은 {@link #hold(ScheduledSeat, Long, LocalDateTime)}와 같다.
+   */
+  public static Reservation hold(Long seatId, Long userId, LocalDateTime expiresAt) {
+    if (seatId == null) {
+      throw new IllegalArgumentException("예약의 좌석 ID는 비어 있을 수 없다");
+    }
+    return hold(new ScheduledSeat(null, seatId), userId, expiresAt);
   }
 
   /**
