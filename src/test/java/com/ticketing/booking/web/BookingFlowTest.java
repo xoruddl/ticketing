@@ -41,8 +41,10 @@ class BookingFlowTest {
     Long userId = BookingFixture.newUserId();
 
     // 1. 좌석 조회: 예매 가능한 좌석을 고른다.
+    // 픽스처가 아직 회차를 들고 있어 회차에서 공연 ID를 꺼낸다. 픽스처에서 회차를 빼면 바뀐다.
+    Long performanceId = stage.schedule().getPerformanceId();
     MvcTestResult seats =
-        mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()).exchange();
+        mvc.get().uri("/performances/{performanceId}/seats", performanceId).exchange();
     assertThat(seats).hasStatusOk();
     assertThat(read(seats, "$[0].available", Boolean.class)).isTrue();
     long seatId = read(seats, "$[0].seatId", Long.class);
@@ -62,7 +64,7 @@ class BookingFlowTest {
     long reservationId = read(held, "$.reservationId", Long.class);
 
     // 선점한 좌석은 다른 사용자에게 예매 불가로 보인다.
-    assertThat(mvc.get().uri("/schedules/{scheduleId}/seats", stage.scheduleId()))
+    assertThat(mvc.get().uri("/performances/{performanceId}/seats", performanceId))
         .bodyJson()
         .extractingPath("$[0].available")
         .isEqualTo(false);

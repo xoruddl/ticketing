@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 /**
  * booking 모듈이 사용자에게 내보내는 에러. 도메인 예외 하나에 코드 하나가 대응한다.
  *
- * 예: SCHEDULE_NOT_FOUND → 404, "회차를 찾을 수 없다"
+ * 예: PERFORMANCE_NOT_FOUND → 404, "공연을 찾을 수 없다"
  *
  * 전역 에러 코드(sharedkernel)로 모으지 않고 모듈 안에 둔다. 한 파일에 모으면 Step 4에서 모듈을 나눌 때 모든 모듈이 그 파일에 의존하게
  * 된다. domain이 아니라 web에 두는 이유는 HTTP 상태를 들고 있어서다. 도메인이 HttpStatus를 알면 안 된다.
@@ -25,7 +25,10 @@ public enum BookingErrorCode {
    */
   INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않다"),
 
-  /** 요청한 회차가 없다. 대응 예외: ScheduleNotFoundException */
+  /** 요청한 공연이 없다. 대응 예외: PerformanceNotFoundException */
+  PERFORMANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "공연을 찾을 수 없다"),
+
+  /** 요청한 회차가 없다. 대응 예외: ScheduleNotFoundException. 회차 기준 선점이 남아 있는 동안만 쓴다. */
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "회차를 찾을 수 없다"),
 
   /** 요청한 회차에 그 좌석이 없다. 대응 예외: SeatNotFoundException */
