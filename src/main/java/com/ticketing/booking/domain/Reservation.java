@@ -96,6 +96,16 @@ public class Reservation {
     return !now.isBefore(expiresAt);
   }
 
+  /**
+   * 이 예약이 잡은 좌석의 ID. 좌석이 공연에 속하므로 이 값 하나로 어느 공연의 어느 좌석인지 정해진다.
+   *
+   * 회차를 빼는 동안 {@code getSeat().seatId()}를 대신한다. 부르는 쪽이 이 메서드로 옮기고 나면 {@link ScheduledSeat}
+   * 필드를 좌석 ID 필드로 바꿔도 부르는 쪽은 바뀌지 않는다.
+   */
+  public Long getSeatId() {
+    return seat.seatId();
+  }
+
   /** 이 사용자가 선점한 예약인가. 결제처럼 본인만 할 수 있는 일을 막을 때 쓴다. */
   public boolean isOwnedBy(Long userId) {
     return this.userId.equals(userId);

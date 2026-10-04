@@ -38,7 +38,7 @@ public record ReservationDetailResponse(
     Reservation reservation = detail.reservation();
     return new ReservationDetailResponse(
         reservation.getId(),
-        reservation.getSeat().seatId(),
+        reservation.getSeatId(),
         reservation.getStatus(),
         reservation.getExpiresAt(),
         detail.payment().map(PaymentView::from).orElse(null),

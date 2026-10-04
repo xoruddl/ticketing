@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
  * 좌석 선점 결과와 내 예매 목록의 한 줄로 쓴다. 결제·티켓까지 보려면 예약 단건 조회({@link ReservationDetailResponse})를
  * 쓴다.
  *
- * 엔티티를 그대로 내보내지 않는 이유는 SeatResponse와 같다. 좌석은 ScheduledSeat 값 객체에서 좌석 ID만 꺼내 담는다.
- * 회차는 담지 않는다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+ * 엔티티를 그대로 내보내지 않는 이유는 SeatResponse와 같다. 회차는 담지 않는다 (DECISIONS.md "도메인:
+ * 회차(Schedule)를 뺀다").
  *
  * expiresAt은 타임존 없이 나간다. 앱이 서울 기준 시계를 쓰므로(ClockConfiguration) 값 자체는 서울 시각이지만,
  * 받는 쪽이 그것을 알 방법은 아직 없다. 예매 조회의 시각(결제·발권 시각)도 같은 형식으로 나가고, 타임존 표기는 아직
@@ -28,7 +28,7 @@ public record ReservationResponse(
   public static ReservationResponse from(Reservation reservation) {
     return new ReservationResponse(
         reservation.getId(),
-        reservation.getSeat().seatId(),
+        reservation.getSeatId(),
         reservation.getStatus(),
         reservation.getExpiresAt());
   }
