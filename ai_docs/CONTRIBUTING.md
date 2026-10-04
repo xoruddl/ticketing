@@ -83,26 +83,6 @@ feature/step-N-* ─PR─▶ develop ─▶ release/step-N ─PR─▶ main (+ �
 
 - 구현 중에 고칠 거리를 발견하면 지금 커밋에 끼우지 않는다. 메모해 두고 **별도 커밋**으로 한다
 
-### 커밋 크기 검사 (pre-commit 훅)
-
-`.githooks/pre-commit`이 커밋 직전에 스테이지된 파일 수를 센다. **3개 이상이면 커밋을 막는다.**
-2개까지 허용하는 것은 TDD 예외(테스트 1개 + 구현 1개) 때문이다.
-
-클론마다 한 번 켠다. git은 기본으로 `.git/hooks`에서 훅을 찾는데, 그 폴더는 커밋되지 않아 저장소의 훅 폴더를 가리키게 한다.
-
-```bash
-git config core.hooksPath .githooks
-```
-
-위 예외(최소 묶음, 기계적 변경)처럼 파일이 많아야 하는 커밋은 **일부러 풀고** 커밋한다.
-
-```bash
-ALLOW_MULTI_FILE_COMMIT=1 git commit -m "style: spotlessApply를 적용한다"
-```
-
-- `git commit --no-verify`로 훅을 건너뛰지 않는다. 예외가 필요하면 위 환경 변수를 쓴다
-- 훅은 실수를 막는 장치다. 파일 2개 이하라도 한 커밋에 한 가지 변경이어야 한다
-
 ### 실패하는 테스트
 
 TDD의 Red(실패하는 테스트)는 로컬에서 도는 짧은 반복이다. **빨간 커밋은 기록에 남기지 않는다.**
