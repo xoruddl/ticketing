@@ -5,9 +5,8 @@ import lombok.Getter;
 /**
  * 요청한 공연이 없다. 예: GET /performances/999/seats 에서 999번 공연이 없을 때
  *
- * 회차를 빼면서 {@link ScheduleNotFoundException}의 자리를 이어받는다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
- *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다. 이 예외를 어떤 상태 코드·메시지로 내보낼지는 web 계층의 BookingErrorCode가 정한다. 도메인이 Spring의
+ * HttpStatus를 import하면 CLEAN_CODE.md의 DIP 신호에 걸리기 때문이다.
  */
 @Getter
 public class PerformanceNotFoundException extends RuntimeException {

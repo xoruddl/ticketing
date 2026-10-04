@@ -9,7 +9,7 @@ import lombok.Getter;
  * 취소로 좌석이 풀리면 다시 성공할 수도 있다. 그래서 응답도 "잘못된 요청"이 아니라 "지금은 안 된다"로 내보낸다
  * ({@link com.ticketing.booking.web.BookingErrorCode}).
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class SeatAlreadyTakenException extends RuntimeException {
