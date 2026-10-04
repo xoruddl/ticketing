@@ -5,7 +5,6 @@ import com.ticketing.booking.domain.ReservationExpiredException;
 import com.ticketing.booking.domain.ReservationNotFoundException;
 import com.ticketing.booking.domain.ReservationNotHeldException;
 import com.ticketing.booking.domain.ReservationNotOwnedException;
-import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.SeatAlreadyTakenException;
 import com.ticketing.booking.domain.SeatNotFoundException;
 import java.util.List;
@@ -61,11 +60,6 @@ public class BookingExceptionHandler {
   @ExceptionHandler(PerformanceNotFoundException.class)
   public ProblemDetail handle(PerformanceNotFoundException e) {
     return problem(BookingErrorCode.PERFORMANCE_NOT_FOUND, e.getPerformanceId());
-  }
-
-  @ExceptionHandler(ScheduleNotFoundException.class)
-  public ProblemDetail handle(ScheduleNotFoundException e) {
-    return problem(BookingErrorCode.SCHEDULE_NOT_FOUND, e.getScheduleId());
   }
 
   @ExceptionHandler(SeatNotFoundException.class)

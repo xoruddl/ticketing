@@ -28,10 +28,7 @@ public enum BookingErrorCode {
   /** 요청한 공연이 없다. 대응 예외: PerformanceNotFoundException */
   PERFORMANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "공연을 찾을 수 없다"),
 
-  /** 요청한 회차가 없다. 대응 예외: ScheduleNotFoundException. 회차 기준 선점이 남아 있는 동안만 쓴다. */
-  SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "회차를 찾을 수 없다"),
-
-  /** 요청한 회차에 그 좌석이 없다. 대응 예외: SeatNotFoundException */
+  /** 요청한 좌석이 없다. 대응 예외: SeatNotFoundException */
   SEAT_NOT_FOUND(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없다"),
 
   /**
