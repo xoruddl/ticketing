@@ -1,10 +1,13 @@
 package com.ticketing.booking.application;
 
+import com.ticketing.booking.domain.PerformanceNotFoundException;
+import com.ticketing.booking.domain.PerformanceRepository;
 import com.ticketing.booking.domain.ReservationRepository;
 import com.ticketing.booking.domain.ReservationStatus;
 import com.ticketing.booking.domain.Schedule;
 import com.ticketing.booking.domain.ScheduleNotFoundException;
 import com.ticketing.booking.domain.ScheduleRepository;
+import com.ticketing.booking.domain.Seat;
 import com.ticketing.booking.domain.SeatRepository;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class SeatQueryService {
 
+  private final PerformanceRepository performanceRepository;
   private final ScheduleRepository scheduleRepository;
   private final SeatRepository seatRepository;
   private final ReservationRepository reservationRepository;
@@ -58,6 +62,29 @@ public class SeatQueryService {
     return seatRepository.findAllByPerformanceIdOrderByIdAsc(schedule.getPerformanceId()).stream()
         // 두 조회 결과를 여기서 합친다. 차지된 좌석 목록에 없으면 예매할 수 있다.
         // occupiedSeatIds가 Set이라 좌석 수만큼 대조해도 해시 조회라 싸다.
+        .map(seat -> new SeatAvailability(seat, !occupiedSeatIds.contains(seat.getId())))
+        .toList();
+  }
+
+  /**
+   * 공연의 좌석을 예매 가능 여부와 함께 id 순으로 돌려준다. 회차 없이 좌석 하나가 한 번 팔리는 모델의 조회다
+   * (DECISIONS.md "도메인: 회차(Schedule)를 뺀다"). 회차를 빼는 동안 {@link #findSeatAvailabilities}를 대신한다.
+   *
+   * 조회 순서가 회차 기준과 반대다. 좌석 목록을 먼저 가져와야 그 좌석 ID로 차지된 좌석을 물을 수 있다. 예약에는 공연
+   * ID가 없기 때문이다. 조회 횟수(좌석 한 번, 예약 한 번)와 판단 기준({@link ReservationStatus#occupying()})은 같다.
+   */
+  public List<SeatAvailability> findSeatAvailabilitiesByPerformance(Long performanceId) {
+    // 좌석이 하나도 없는 것과 공연이 없는 것을 구분하려고 공연부터 확인한다. 좌석 목록만 보면 둘 다 빈 목록이다.
+    if (!performanceRepository.existsById(performanceId)) {
+      throw new PerformanceNotFoundException(performanceId);
+    }
+
+    List<Seat> seats = seatRepository.findAllByPerformanceIdOrderByIdAsc(performanceId);
+    List<Long> seatIds = seats.stream().map(Seat::getId).toList();
+    Set<Long> occupiedSeatIds =
+        reservationRepository.findOccupiedSeatIdsAmong(seatIds, ReservationStatus.occupying());
+
+    return seats.stream()
         .map(seat -> new SeatAvailability(seat, !occupiedSeatIds.contains(seat.getId())))
         .toList();
   }

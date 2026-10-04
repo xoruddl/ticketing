@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ticketing.TestcontainersConfiguration;
 import com.ticketing.booking.BookingFixture;
 import com.ticketing.booking.BookingFixture.Stage;
+import com.ticketing.booking.domain.PerformanceNotFoundException;
 import com.ticketing.booking.domain.Reservation;
 import com.ticketing.booking.domain.ReservationRepository;
 import com.ticketing.booking.domain.Schedule;
@@ -108,5 +109,49 @@ class SeatQueryServiceTest {
 
     assertThatThrownBy(() -> seatQueryService.findSeatAvailabilities(missingScheduleId))
         .isInstanceOf(ScheduleNotFoundException.class);
+  }
+
+  // 아래는 회차 없이 공연 기준으로 조회한다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+  // 회차 기준 테스트는 전환이 끝나면 지운다.
+
+  @Test
+  void 아무도_선점하지_않은_공연은_모든_좌석이_예매_가능하다() {
+    Stage stage = fixture.createStage(3);
+
+    List<SeatAvailability> seats =
+        seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage));
+
+    assertThat(seats).hasSize(3).allMatch(SeatAvailability::available);
+  }
+
+  /** 선점은 아직 저장소로 바로 넣는다. 좌석만으로 선점하는 서비스 메서드는 다음 단위에서 만든다. */
+  @Test
+  void 공연에서_선점된_좌석만_예매_불가로_나온다() {
+    Stage stage = fixture.createStage(3);
+    reservationRepository.save(
+        Reservation.hold(stage.seatId(1), USER_ID, LocalDateTime.of(2099, 1, 1, 0, 0)));
+
+    List<SeatAvailability> seats =
+        seatQueryService.findSeatAvailabilitiesByPerformance(performanceId(stage));
+
+    // 회차 기준 테스트와 같은 이유로 순서를 먼저 못 박는다.
+    assertThat(seats)
+        .extracting(availability -> availability.seat().getId())
+        .containsExactly(stage.seatId(0), stage.seatId(1), stage.seatId(2));
+    assertThat(seats).extracting(SeatAvailability::available).containsExactly(true, false, true);
+  }
+
+  @Test
+  void 없는_공연의_좌석은_조회할_수_없다() {
+    long missingPerformanceId = 0L;
+
+    assertThatThrownBy(
+            () -> seatQueryService.findSeatAvailabilitiesByPerformance(missingPerformanceId))
+        .isInstanceOf(PerformanceNotFoundException.class);
+  }
+
+  /** 픽스처가 아직 회차를 들고 있어 회차에서 공연 ID를 꺼낸다. 픽스처에서 회차를 빼면 바뀐다. */
+  private Long performanceId(Stage stage) {
+    return stage.schedule().getPerformanceId();
   }
 }
