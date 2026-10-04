@@ -34,7 +34,6 @@ class SeatHoldTest {
     // 201 application/json, Location: /reservations/1
     // {
     //   "reservationId":1,
-    //   "scheduleId":10,
     //   "seatId":100,
     //   "status":"HELD",
     //   "expiresAt":"2026-10-01T19:05:00"
@@ -47,6 +46,8 @@ class SeatHoldTest {
               // ID는 DB가 매기므로 값이 아니라 채워졌는지만 본다.
               assertThat(json).extractingPath("$.reservationId").isNotNull();
               assertThat(json).extractingPath("$.seatId").isEqualTo(stage.seatId(0).intValue());
+              // 회차가 없는 모델이라 응답에도 회차 필드가 없다. null로 남겨두지 않는다.
+              assertThat(json).doesNotHavePath("$.scheduleId");
               // 선점 직후라 항상 HELD다.
               assertThat(json).extractingPath("$.status").isEqualTo("HELD");
               // 만료 시각이 없으면 클라이언트가 남은 시간을 보여줄 수 없다.
