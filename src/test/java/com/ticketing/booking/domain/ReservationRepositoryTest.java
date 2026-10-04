@@ -38,7 +38,7 @@ class ReservationRepositoryTest {
     Reservation found = reservationRepository.findById(saved.getId()).orElseThrow();
 
     assertThat(found.getSeat().scheduleId()).isNull();
-    assertThat(found.getSeat().seatId()).isEqualTo(stage.seatId(0));
+    assertThat(found.getSeatId()).isEqualTo(stage.seatId(0));
   }
 
   @Test

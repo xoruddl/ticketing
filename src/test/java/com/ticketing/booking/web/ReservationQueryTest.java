@@ -47,9 +47,7 @@ class ReservationQueryTest {
         .satisfies(
             json -> {
               assertThat(json).extractingPath("$.reservationId").isEqualTo(held.getId().intValue());
-              assertThat(json)
-                  .extractingPath("$.seatId")
-                  .isEqualTo(held.getSeat().seatId().intValue());
+              assertThat(json).extractingPath("$.seatId").isEqualTo(held.getSeatId().intValue());
               // 회차가 없는 모델이라 응답에도 회차 필드가 없다.
               assertThat(json).doesNotHavePath("$.scheduleId");
               assertThat(json).extractingPath("$.status").isEqualTo("HELD");

@@ -28,7 +28,7 @@ class ReservationTest {
   void 좌석만으로_선점하면_회차_없이_좌석을_차지한다() {
     Reservation reservation = Reservation.hold(100L, 7L, EXPIRES_AT);
 
-    assertThat(reservation.getSeat().seatId()).isEqualTo(100L);
+    assertThat(reservation.getSeatId()).isEqualTo(100L);
     assertThat(reservation.getSeat().scheduleId()).isNull();
     assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
   }

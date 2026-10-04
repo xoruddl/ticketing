@@ -48,7 +48,7 @@ class ReservationServiceTest {
     assertThat(reservation.getId()).isNotNull();
     assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
     assertThat(reservation.getUserId()).isEqualTo(USER_ID);
-    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(0));
+    assertThat(reservation.getSeatId()).isEqualTo(stage.seatId(0));
   }
 
   /** 만료 시각이 몇 분 뒤인지는 HoldPolicyTest가 본다. 여기서는 선점에 기한이 붙는지만 확인한다. */
@@ -107,7 +107,7 @@ class ReservationServiceTest {
 
     Reservation reservation = reservationService.hold(stage.seatId(1), OTHER_USER_ID);
 
-    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(1));
+    assertThat(reservation.getSeatId()).isEqualTo(stage.seatId(1));
   }
 
   @Test
