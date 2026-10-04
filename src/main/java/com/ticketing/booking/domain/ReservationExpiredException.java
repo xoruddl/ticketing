@@ -9,7 +9,7 @@ import lombok.Getter;
  * 예약의 상태는 아직 HELD일 수 있다. Step 0은 만료된 선점을 EXPIRED로 바꿔주는 처리가 없어서, 만료는 상태가 아니라
  * 만료 시각과 지금을 비교해 판단한다({@link Reservation#isExpired}). 누가 언제 상태를 바꿀지는 Step 3에서 정한다.
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class ReservationExpiredException extends RuntimeException {

@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * 요청한 예약이 없다. 예: POST /reservations/999/payment 에서 999번 예약이 없을 때
  *
- * 도메인 예외는 HTTP를 모른다({@link ScheduleNotFoundException} 주석 참고).
+ * 도메인 예외는 HTTP를 모른다({@link PerformanceNotFoundException} 주석 참고).
  */
 @Getter
 public class ReservationNotFoundException extends RuntimeException {
