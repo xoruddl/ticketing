@@ -26,18 +26,16 @@ public class ReservationController {
   private final ReservationQueryService reservationQueryService;
 
   /**
-   * 좌석을 선점한다. 예: POST /reservations {"scheduleId":10,"seatId":100,"userId":7}
+   * 좌석을 선점한다. 예: POST /reservations {"seatId":100,"userId":7}
    *
    * 새 예약을 만들었으므로 200이 아니라 201로 답하고, 어디서 찾는지 Location 헤더로 알려준다. 그 주소로 예약 단건
    * 조회(GET /reservations/{id})를 하면 된다.
    *
-   * 거절은 예외로 나가고 BookingExceptionHandler가 상태 코드를 정한다. 없는 회차·좌석은 404, 이미 팔린 좌석은
-   * 409다.
+   * 거절은 예외로 나가고 BookingExceptionHandler가 상태 코드를 정한다. 없는 좌석은 404, 이미 팔린 좌석은 409다.
    */
   @PostMapping("/reservations")
   public ResponseEntity<ReservationResponse> hold(@Valid @RequestBody ReservationRequest request) {
-    Reservation reservation =
-        reservationService.hold(request.scheduleId(), request.seatId(), request.userId());
+    Reservation reservation = reservationService.hold(request.seatId(), request.userId());
     ReservationResponse response = ReservationResponse.from(reservation);
     return ResponseEntity.created(URI.create("/reservations/" + response.reservationId()))
         .body(response);

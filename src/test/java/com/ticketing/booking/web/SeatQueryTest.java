@@ -68,7 +68,7 @@ class SeatQueryTest {
   void 선점된_좌석은_예매_불가로_응답한다() {
     Stage stage = fixture.createStage(2);
     // 저장소로 예약을 직접 넣지 않고 선점 API를 거친다. 사용자가 실제로 겪는 순서(선점 → 목록 새로고침) 그대로 본다.
-    holdSeat(stage.scheduleId(), stage.seatId(0));
+    holdSeat(stage.seatId(0));
 
     // 200 application/json
     // [
@@ -130,12 +130,12 @@ class SeatQueryTest {
    *
    * exchange()로 바로 실행하고, 201인지 확인해 둔다. 선점이 조용히 실패하면 아래 단언이 엉뚱한 이유로 깨지기 때문이다.
    */
-  private void holdSeat(long scheduleId, long seatId) {
+  private void holdSeat(long seatId) {
     String body =
         """
-        {"scheduleId":%d,"seatId":%d,"userId":7}
+        {"seatId":%d,"userId":7}
         """
-            .formatted(scheduleId, seatId);
+            .formatted(seatId);
     assertThat(
             mvc.post()
                 .uri("/reservations")

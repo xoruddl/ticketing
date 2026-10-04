@@ -56,9 +56,9 @@ class BookingFlowTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                {"scheduleId":%d,"seatId":%d,"userId":%d}
+                {"seatId":%d,"userId":%d}
                 """
-                    .formatted(stage.scheduleId(), seatId, userId))
+                    .formatted(seatId, userId))
             .exchange();
     assertThat(held).hasStatus(HttpStatus.CREATED);
     long reservationId = read(held, "$.reservationId", Long.class);
