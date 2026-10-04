@@ -142,4 +142,48 @@ class ReservationServiceTest {
             () -> reservationService.hold(stage.scheduleId(), otherStage.seatId(0), USER_ID))
         .isInstanceOf(SeatNotFoundException.class);
   }
+
+  // 아래는 회차 없이 좌석만으로 선점한다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+  // 회차 기준 테스트는 전환이 끝나면 지운다.
+
+  @Test
+  void 좌석만으로_선점하면_회차_없이_선점_상태로_저장된다() {
+    Stage stage = fixture.createStage(1);
+
+    Reservation reservation = reservationService.hold(stage.seatId(0), USER_ID);
+
+    assertThat(reservation.getId()).isNotNull();
+    assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HELD);
+    assertThat(reservation.getUserId()).isEqualTo(USER_ID);
+    assertThat(reservation.getSeat().scheduleId()).isNull();
+    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(0));
+    assertThat(reservation.isExpired(LocalDateTime.now(clock))).isFalse();
+  }
+
+  @Test
+  void 좌석만으로_선점된_좌석은_다른_사용자가_선점할_수_없다() {
+    Stage stage = fixture.createStage(1);
+    reservationService.hold(stage.seatId(0), USER_ID);
+
+    assertThatThrownBy(() -> reservationService.hold(stage.seatId(0), OTHER_USER_ID))
+        .isInstanceOf(SeatAlreadyTakenException.class);
+  }
+
+  @Test
+  void 좌석만으로_선점할_때_옆_좌석은_따로_선점된다() {
+    Stage stage = fixture.createStage(2);
+    reservationService.hold(stage.seatId(0), USER_ID);
+
+    Reservation reservation = reservationService.hold(stage.seatId(1), OTHER_USER_ID);
+
+    assertThat(reservation.getSeat().seatId()).isEqualTo(stage.seatId(1));
+  }
+
+  @Test
+  void 없는_좌석은_좌석만으로도_선점할_수_없다() {
+    long missingSeatId = 0L;
+
+    assertThatThrownBy(() -> reservationService.hold(missingSeatId, USER_ID))
+        .isInstanceOf(SeatNotFoundException.class);
+  }
 }

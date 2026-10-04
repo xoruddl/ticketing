@@ -61,4 +61,25 @@ public class ReservationService {
     return reservationRepository.save(
         Reservation.hold(scheduledSeat, userId, holdPolicy.expiresAt()));
   }
+
+  /**
+   * 회차 없이 좌석 하나를 선점한다. 좌석 하나가 한 번 팔리는 모델의 선점이다
+   * (DECISIONS.md "도메인: 회차(Schedule)를 뺀다"). 회차를 빼는 동안 {@link #hold(Long, Long, Long)}를 대신한다.
+   *
+   * 거절하는 경우
+   * - 좌석이 없다: SeatNotFoundException
+   * - 이미 선점·확정된 좌석이다: SeatAlreadyTakenException
+   *
+   * 회차 기준 선점에 있던 "이 회차의 공연 좌석인가" 검증은 없다. 좌석이 곧 공연에 속하므로 따질 회차가 없다.
+   * 확인과 저장 사이에 다른 요청이 끼어들 수 있는 것은 회차 기준 선점과 같다 (Step 2에서 막는다).
+   */
+  public Reservation hold(Long seatId, Long userId) {
+    if (!seatRepository.existsById(seatId)) {
+      throw new SeatNotFoundException(seatId);
+    }
+    if (reservationRepository.existsBySeatIdAndStatusIn(seatId, ReservationStatus.occupying())) {
+      throw new SeatAlreadyTakenException(seatId);
+    }
+    return reservationRepository.save(Reservation.hold(seatId, userId, holdPolicy.expiresAt()));
+  }
 }

@@ -21,4 +21,14 @@ public class SeatAlreadyTakenException extends RuntimeException {
     super("이미 팔린 좌석이다: 회차 " + seat.scheduleId() + ", 좌석 " + seat.seatId());
     this.seat = seat;
   }
+
+  /**
+   * 회차 없이 좌석만으로 선점하다 거절됐다 (DECISIONS.md "도메인: 회차(Schedule)를 뺀다").
+   *
+   * 회차를 빼는 동안에는 응답 쪽이 그대로 {@link #getSeat()}를 쓸 수 있게 회차 칸을 비운 {@link ScheduledSeat}에 담는다.
+   */
+  public SeatAlreadyTakenException(Long seatId) {
+    super("이미 팔린 좌석이다: 좌석 " + seatId);
+    this.seat = new ScheduledSeat(null, seatId);
+  }
 }
