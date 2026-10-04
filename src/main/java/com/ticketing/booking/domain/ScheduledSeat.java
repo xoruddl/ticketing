@@ -11,17 +11,19 @@ import jakarta.persistence.Embeddable;
  * {@link Reservation} 안에 {@code @Embedded}로 저장되어, 테이블에는 schedule_id, seat_id 컬럼으로 풀려
  * 들어간다. Step 2에서 이중 선점을 막을 때 유니크 제약이 걸릴 후보도 이 두 컬럼이다.
  *
- * @param scheduleId 회차 ID
+ * @param scheduleId 회차 ID. 회차 없이 좌석만으로 선점한 예약에서는 비어 있다
  * @param seatId 좌석 ID
  */
 @Embeddable
 public record ScheduledSeat(Long scheduleId, Long seatId) {
 
-  /** 회차·좌석은 비어 있을 수 없다. JPA가 DB에서 읽어올 때도 이 검증을 거친다. */
+  /**
+   * 좌석은 비어 있을 수 없다. JPA가 DB에서 읽어올 때도 이 검증을 거친다.
+   *
+   * 회차는 비어 있어도 된다. 회차를 빼는 동안 좌석만으로 선점한 예약이 회차 없이 저장되기 때문이다
+   * (DECISIONS.md "도메인: 회차(Schedule)를 뺀다"). 전환이 끝나면 이 값 객체째 없앤다.
+   */
   public ScheduledSeat {
-    if (scheduleId == null) {
-      throw new IllegalArgumentException("회차 ID는 비어 있을 수 없다");
-    }
     if (seatId == null) {
       throw new IllegalArgumentException("좌석 ID는 비어 있을 수 없다");
     }

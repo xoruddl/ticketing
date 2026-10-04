@@ -7,10 +7,10 @@ import org.junit.jupiter.api.Test;
 
 class ScheduledSeatTest {
 
+  /** 회차를 빼는 동안만 허용한다. 회차 없이 좌석만으로 선점한 예약이 이 모양으로 저장된다. */
   @Test
-  void 회차_없이_만들_수_없다() {
-    assertThatThrownBy(() -> new ScheduledSeat(null, 100L))
-        .isInstanceOf(IllegalArgumentException.class);
+  void 회차_없이도_만들_수_있다() {
+    assertThat(new ScheduledSeat(null, 100L).seatId()).isEqualTo(100L);
   }
 
   @Test
